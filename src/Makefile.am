@@ -3,7 +3,7 @@ bin_PROGRAMS += yatta
 yatta_SOURCES = \
 	src/main.cc
 
-yatta_CFLAGS = \
+yatta_CXXFLAGS = \
 	$(AM_CFLAGS) \
 	$(GTKMM_CFLAGS)
 

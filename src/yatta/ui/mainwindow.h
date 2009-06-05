@@ -1,4 +1,4 @@
-/*      main.cc -- part of the Yatta! Download Manager
+/*      mainwindow.h -- part of the Yatta! Download Manager
  *      Copyright (C) 2009, Chow Loong Jin <hyperair@gmail.com>
  *  
  *      This program is free software: you can redistribute it and/or modify
@@ -15,12 +15,22 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "yatta/ui/main.h"
+#ifndef YATTA_UI_MAINWINDOW_H
+#define YATTA_UI_MAINWINDOW_H
 
-int
-main (int argc, char **argv)
+#include <gtkmm/window.h>
+namespace Yatta
 {
-    Yatta::UI::Main ui_kit (argc, argv);
-    ui_kit.run();
-    return 0;
-}
+    namespace UI
+    {
+        class MainWindow :
+            public Gtk::Window
+        {
+            public:
+                MainWindow();
+            private:
+        };
+    };
+};
+
+#endif // YATTA_UI_MAINWINDOW_H
