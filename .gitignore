@@ -17,5 +17,6 @@ INSTALL
 README
 Makefile
 *.o
-./yatta
+yatta
+!src/yatta
 .dirstamp

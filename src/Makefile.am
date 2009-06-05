@@ -8,4 +8,6 @@ yatta_CXXFLAGS = \
 	$(GTKMM_CFLAGS)
 
 yatta_LDADD = \
-	$(GTKMM_LIBADD)
+	$(GTKMM_LIBS)
+
+include src/yatta/Makefile.am
