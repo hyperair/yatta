@@ -20,3 +20,5 @@ Makefile
 yatta
 !src/yatta
 .dirstamp
+TAGS
+tags
