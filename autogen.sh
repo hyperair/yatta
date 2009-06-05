@@ -1,4 +1,4 @@
 #!/bin/sh
 
-. bootstrap
+. ./bootstrap || exit 1
 ./configure "$@"
