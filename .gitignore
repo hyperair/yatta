@@ -1,4 +1,4 @@
-Makefile.in
+Makefile.in*
 *~
 *.swp
 aclocal.m4
@@ -22,3 +22,5 @@ yatta
 .dirstamp
 TAGS
 tags
+intltool-*.in
+po/POTFILES

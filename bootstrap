@@ -5,3 +5,4 @@ git log > ChangeLog
 [ -f NEWS ] || touch NEWS
 [ -f README ] || touch README
 autoreconf -vfi
+intltoolize -c --force
