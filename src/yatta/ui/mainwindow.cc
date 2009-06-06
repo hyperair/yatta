@@ -15,15 +15,23 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <gtkmm/main.h>
+
 #include "mainwindow.h"
 
 namespace Yatta
 {
     namespace UI
     {
-        MainWindow::MainWindow() :
-            Gtk::Window()
+        MainWindow::MainWindow () :
+            Gtk::Window ()
         {
+        }
+
+        void
+        MainWindow::on_hide ()
+        {
+            Gtk::Main::quit();
         }
     };
 };

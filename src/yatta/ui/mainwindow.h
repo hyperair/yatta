@@ -27,7 +27,9 @@ namespace Yatta
             public Gtk::Window
         {
             public:
-                MainWindow();
+                MainWindow ();
+            protected:
+                virtual void on_hide ();
             private:
         };
     };

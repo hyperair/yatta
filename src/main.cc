@@ -15,11 +15,22 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <libintl.h>
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "yatta/ui/main.h"
 
 int
 main (int argc, char **argv)
 {
+    // initialize gettext
+    bindtextdomain (GETTEXT_PACKAGE, PROGRAMNAME_LOCALEDIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+    textdomain (GETTEXT_PACKAGE);
+
     Yatta::UI::Main ui_kit (argc, argv);
     ui_kit.run();
     return 0;
