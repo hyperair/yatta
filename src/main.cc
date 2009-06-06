@@ -32,6 +32,6 @@ main (int argc, char **argv)
     textdomain (GETTEXT_PACKAGE);
 
     Yatta::UI::Main ui_kit (argc, argv);
-    ui_kit.run();
+    ui_kit.run ();
     return 0;
 }
