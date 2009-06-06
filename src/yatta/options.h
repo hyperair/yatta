@@ -1,4 +1,4 @@
-/*      main.cc -- part of the Yatta! Download Manager
+/*      options.h -- part of the Yatta! Download Manager
  *      Copyright (C) 2009, Chow Loong Jin <hyperair@gmail.com>
  *  
  *      This program is free software: you can redistribute it and/or modify
@@ -15,37 +15,29 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libintl.h>
-#include <iostream>
+#ifndef YATTA_OPTIONS_H
+#define YATTA_OPTIONS_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <glibmm/optioncontext.h>
 
-#include "yatta/options.h"
-#include "yatta/ui/main.h"
-
-int
-main (int argc, char **argv)
+namespace Yatta
 {
-    // initialize gettext
-    bindtextdomain (GETTEXT_PACKAGE, PROGRAMNAME_LOCALEDIR);
-    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-    textdomain (GETTEXT_PACKAGE);
+    class Options : 
+        public Glib::OptionContext
+    {
+        public:
+            Options ();
 
-    // initialize ui kit
-    Yatta::UI::Main ui_kit (argc, argv);
+            /**
+             * @description: Get the datadir, containing data files
+             * @return: Glib::ustring containing data dir
+             */
+            const Glib::ustring &get_datadir ();
+            virtual ~Options ();
+        private:
+            Glib::ustring m_datadir; // datadir (defaults to DATADIR)
+            Glib::OptionGroup m_maingroup; // main options group
+    };
+};
 
-    // get options
-    Yatta::Options options;
-    try {
-        options.parse (argc, argv);
-    } catch (Glib::OptionError &e) {
-        std::cerr << e.what() << std::endl;
-        exit (1);
-    }
-
-    // run main loop
-    ui_kit.run ();
-    return 0;
-}
+#endif // YATTA_OPTIONS_H

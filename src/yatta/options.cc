@@ -1,4 +1,4 @@
-/*      main.cc -- part of the Yatta! Download Manager
+/*      options.cc -- part of the Yatta! Download Manager
  *      Copyright (C) 2009, Chow Loong Jin <hyperair@gmail.com>
  *  
  *      This program is free software: you can redistribute it and/or modify
@@ -15,37 +15,41 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libintl.h>
-#include <iostream>
+#include <glibmm/i18n.h>
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "yatta/options.h"
-#include "yatta/ui/main.h"
+#include "options.h"
 
-int
-main (int argc, char **argv)
+namespace Yatta
 {
-    // initialize gettext
-    bindtextdomain (GETTEXT_PACKAGE, PROGRAMNAME_LOCALEDIR);
-    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-    textdomain (GETTEXT_PACKAGE);
+    Options::Options () : 
+        Glib::OptionContext (),
+        m_datadir (DATADIR),
+        m_maingroup ("main", "Main options")
+    {
+        {
+            // prepare datadir OptionEntry
+            Glib::OptionEntry datadir_entry;
+            datadir_entry.set_long_name ("datadir");
+            datadir_entry.set_description 
+                (Glib::ustring (_("Override data directory") )
+                 + " [" + DATADIR + "]");
+            m_maingroup.add_entry (datadir_entry, m_datadir);
+        }
 
-    // initialize ui kit
-    Yatta::UI::Main ui_kit (argc, argv);
-
-    // get options
-    Yatta::Options options;
-    try {
-        options.parse (argc, argv);
-    } catch (Glib::OptionError &e) {
-        std::cerr << e.what() << std::endl;
-        exit (1);
+        set_main_group (m_maingroup);
     }
 
-    // run main loop
-    ui_kit.run ();
-    return 0;
+    const Glib::ustring &
+    Options::get_datadir ()
+    {
+        return m_datadir;
+    }
+
+    Options::~Options ()
+    {
+    }
 }
