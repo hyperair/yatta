@@ -1,5 +1,6 @@
 AUTOMAKE_OPTIONS = subdir-objects
 bin_PROGRAMS = 
+SUBDIRS = po
 
 run: yatta
 	./yatta
