@@ -15,7 +15,9 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <glibmm/i18n.h>
 #include <gtkmm/main.h>
+#include <gtkmm/box.h>
 
 #include "mainwindow.h"
 
@@ -26,6 +28,14 @@ namespace Yatta
         MainWindow::MainWindow () :
             Gtk::Window ()
         {
+            // set defaults for the window
+            set_title (_("Yatta Download Manager"));
+            set_default_size (640, 480);
+
+            // begin constructing the window
+            // add a vbox to the window first
+            Gtk::VBox *main_vbox = manage (new Gtk::VBox);
+            add (*main_vbox);
         }
 
         void

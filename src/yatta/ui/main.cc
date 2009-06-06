@@ -15,6 +15,9 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <gtkmm/main.h>
+#include <gtkmm/uimanager.h>
+
 #include "main.h"
 
 namespace Yatta
@@ -23,14 +26,15 @@ namespace Yatta
     {
         Main::Main (int argc, char **argv) :
             Gtk::Main (argc, argv),
-            m_mainwin()
+            m_mainwin (),
+            m_ref_uimgr (Gtk::UIManager::create ())
         {
         }
 
         void
         Main::run ()
         {
-            m_mainwin.show();
+            m_mainwin.show ();
             Gtk::Main::run ();
         }
 

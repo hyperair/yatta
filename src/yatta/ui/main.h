@@ -19,6 +19,10 @@
 #define YATTA_UI_MAIN_H
 
 #include <gtkmm/main.h>
+
+// forward declaration(s)
+namespace Gtk { class UIManager; };
+
 #include "mainwindow.h"
 
 namespace Yatta
@@ -37,19 +41,20 @@ namespace Yatta
                  * @param argc Number of arguments
                  * @param argv Array of arguments
                  */
-                Main(int argc, char **argv);
+                Main (int argc, char **argv);
 
                 /**
                  * @description: Run the main loop of the UI
                  */
-                void run();
+                void run ();
 
                 /**
                  * @brief: Desctructor
                  */
-                virtual ~Main();
+                virtual ~Main ();
             private:
                 MainWindow m_mainwin;
+                Glib::RefPtr<Gtk::UIManager> m_ref_uimgr;
         };
     };
 };
