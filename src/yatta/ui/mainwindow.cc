@@ -75,8 +75,8 @@ namespace Yatta
             }
 
             // add menu and toolbar into the main vbox
-            main_vbox->pack_start (*menu);
-            main_vbox->pack_start (*toolbar);
+            main_vbox->pack_start (*menu, Gtk::PACK_SHRINK);
+            main_vbox->pack_start (*toolbar, Gtk::PACK_SHRINK);
 
             // show the main vbox!
             main_vbox->show_all ();
