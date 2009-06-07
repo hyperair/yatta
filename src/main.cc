@@ -33,17 +33,11 @@ main (int argc, char **argv)
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
     textdomain (GETTEXT_PACKAGE);
 
-    // initialize ui kit
-    Yatta::UI::Main ui_kit (argc, argv);
-
     // get options
     Yatta::Options options;
-    try {
-        options.parse (argc, argv);
-    } catch (Glib::OptionError &e) {
-        std::cerr << e.what() << std::endl;
-        exit (1);
-    }
+
+    // initialize ui kit
+    Yatta::UI::Main ui_kit (argc, argv, options);
 
     // run main loop
     ui_kit.run ();

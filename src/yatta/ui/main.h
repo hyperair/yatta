@@ -22,6 +22,7 @@
 
 // forward declaration(s)
 namespace Gtk { class UIManager; };
+namespace Yatta { class Options; };
 
 #include "mainwindow.h"
 
@@ -41,7 +42,7 @@ namespace Yatta
                  * @param argc Number of arguments
                  * @param argv Array of arguments
                  */
-                Main (int argc, char **argv);
+                Main (int argc, char **argv, Options &options);
 
                 /**
                  * @description: Run the main loop of the UI
@@ -55,6 +56,7 @@ namespace Yatta
             private:
                 MainWindow m_mainwin;
                 Glib::RefPtr<Gtk::UIManager> m_ref_uimgr;
+                Options &m_options;
         };
     };
 };
