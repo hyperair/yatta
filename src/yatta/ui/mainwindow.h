@@ -19,18 +19,41 @@
 #define YATTA_UI_MAINWINDOW_H
 
 #include <gtkmm/window.h>
+#include <gtkmm/uimanager.h>
+
 namespace Yatta
 {
     namespace UI
     {
+        // forward declaration
+        class Main;
+
         class MainWindow :
             public Gtk::Window
         {
             public:
-                MainWindow ();
+                MainWindow (Main &ui_main);
+
             protected:
+                /**
+                 * @description: Constructs widgets in the window
+                 */
+                virtual void construct_widgets ();
+
+                /**
+                 * @description: Prepares Actions for the menu and toolbar
+                 *               and adds them into m_ref_uimgr
+                 */
+                virtual void prepare_actions ();
+
+                /**
+                 * @see Gtk::Widget::hide()
+                 */
                 virtual void on_hide ();
+
             private:
+                Glib::RefPtr<Gtk::UIManager> m_ref_uimgr;
+                Main &m_ui_main; // main UI object
         };
     };
 };

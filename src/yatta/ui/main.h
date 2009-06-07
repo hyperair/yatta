@@ -21,7 +21,6 @@
 #include <gtkmm/main.h>
 
 // forward declaration(s)
-namespace Gtk { class UIManager; };
 namespace Yatta { class Options; };
 
 #include "mainwindow.h"
@@ -42,7 +41,7 @@ namespace Yatta
                  * @param argc Number of arguments
                  * @param argv Array of arguments
                  */
-                Main (int argc, char **argv, Options &options);
+                Main (int &argc, char **&argv, Options &options);
 
                 /**
                  * @description: Run the main loop of the UI
@@ -50,13 +49,22 @@ namespace Yatta
                 void run ();
 
                 /**
+                 * @description: Get Yatta::Options object
+                 * @return: reference to the Options object
+                 */
+                Options &get_options ();
+
+                /**
                  * @brief: Desctructor
                  */
                 virtual ~Main ();
+
             private:
-                MainWindow m_mainwin;
-                Glib::RefPtr<Gtk::UIManager> m_ref_uimgr;
-                Options &m_options;
+                // Options must come before MainWindow, otherwise segfault
+                // reason is MainWindow's construction requires m_options
+                // to be defined.
+                Options &m_options; // program options
+                MainWindow m_mainwin; // main window
         };
     };
 };

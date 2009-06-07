@@ -16,7 +16,6 @@
  */
 
 #include <gtkmm/main.h>
-#include <gtkmm/uimanager.h>
 
 #include "main.h"
 #include "../options.h"
@@ -25,20 +24,11 @@ namespace Yatta
 {
     namespace UI
     {
-        Main::Main (int argc, char **argv, Options &options) :
+        Main::Main (int &argc, char **&argv, Options &options) :
             Gtk::Main (argc, argv, options),
-            m_mainwin (),
-            m_ref_uimgr (Gtk::UIManager::create ()),
-            m_options (options)
+            m_options (options),
+            m_mainwin (*this)
         {
-            try {
-                m_ref_uimgr->add_ui_from_file (options.get_datadir () +
-                                               "/main_menu.ui");
-                m_ref_uimgr->add_ui_from_file (options.get_datadir () +
-                                               "/main_tb.ui");
-            } catch (Glib::FileError &e) {
-                // TODO: log error and die!
-            }
         }
 
         void
@@ -46,6 +36,12 @@ namespace Yatta
         {
             m_mainwin.show ();
             Gtk::Main::run ();
+        }
+
+        Options &
+        Main::get_options ()
+        {
+            return m_options;
         }
 
         Main::~Main ()
