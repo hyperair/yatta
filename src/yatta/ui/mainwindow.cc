@@ -169,7 +169,7 @@ namespace Yatta
         void
         MainWindow::on_hide ()
         {
-            Gtk::Main::quit();
+            Gtk::Main::quit ();
         }
     };
 };
