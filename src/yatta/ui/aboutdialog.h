@@ -1,4 +1,4 @@
-/*      main.cc -- part of the Yatta! Download Manager
+/*      aboutwindow.h -- part of the Yatta! Download Manager
  *      Copyright (C) 2009, Chow Loong Jin <hyperair@gmail.com>
  *  
  *      This program is free software: you can redistribute it and/or modify
@@ -15,44 +15,24 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gtkmm/main.h>
+#ifndef YATTA_UI_ABOUTWINDOW_H
+#define YATTA_UI_ABOUTWINDOW_H
 
-#include "main.h"
-#include "../options.h"
+#include <gtkmm/aboutdialog.h>
 
 namespace Yatta
 {
     namespace UI
     {
-        Main::Main (int &argc, char **&argv, Options &options) :
-            Gtk::Main (argc, argv, options),
-            m_options (options),
-            m_mainwin (*this),
-            m_aboutdlg ()
+        class About :
+            public Gtk::AboutDialog
         {
-        }
-
-        void
-        Main::run ()
-        {
-            m_mainwin.show ();
-            Gtk::Main::run ();
-        }
-
-        void
-        Main::show_aboutdlg ()
-        {
-            m_aboutdlg.show ();
-        }
-
-        Options &
-        Main::get_options ()
-        {
-            return m_options;
-        }
-
-        Main::~Main ()
-        {
-        }
+            public:
+                About ();
+                virtual void on_response (int response_id);
+                virtual ~About ();
+        };
     };
 };
+
+#endif // YATTA_UI_ABOUTWINDOW_H

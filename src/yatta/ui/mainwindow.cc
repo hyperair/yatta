@@ -36,7 +36,7 @@ namespace Yatta
             m_ui_main (ui_main)
         {
             // set defaults for the window
-            set_title (_("Yatta Download Manager"));
+            set_title (_("Yatta! Download Manager"));
             set_default_size (640, 480);
 
             // prepare uimgr
@@ -160,7 +160,8 @@ namespace Yatta
 
             // in help menu
             actions->add (Gtk::Action::create ("ShowAbtDlg", 
-                                               Gtk::Stock::ABOUT));
+                                               Gtk::Stock::ABOUT),
+                          sigc::mem_fun (m_ui_main, &Main::show_aboutdlg));
 
             // add the actions into the ui mgr
             m_ref_uimgr->insert_action_group (actions);

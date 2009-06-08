@@ -24,6 +24,7 @@
 namespace Yatta { class Options; };
 
 #include "mainwindow.h"
+#include "aboutdialog.h"
 
 namespace Yatta
 {
@@ -49,6 +50,11 @@ namespace Yatta
                 void run ();
 
                 /**
+                 * @description: Show the about dialog
+                 */
+                void show_aboutdlg ();
+
+                /**
                  * @description: Get Yatta::Options object
                  * @return: reference to the Options object
                  */
@@ -65,6 +71,7 @@ namespace Yatta
                 // to be defined.
                 Options &m_options; // program options
                 MainWindow m_mainwin; // main window
+                About m_aboutdlg; // about dialog
         };
     };
 };
