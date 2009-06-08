@@ -40,17 +40,12 @@ namespace Yatta
             set_default_size (640, 480);
 
             // prepare uimgr
-            try {
-                m_ref_uimgr->add_ui_from_file 
-                    (m_ui_main.get_options ().get_datadir () +
-                     "/main_menu.ui");
-                m_ref_uimgr->add_ui_from_file
-                    (m_ui_main.get_options ().get_datadir () +
-                     "/main_tb.ui");
-            } catch (Glib::FileError &e) {
-                // TODO: log error
-                exit (1);
-            }
+            m_ref_uimgr->add_ui_from_file 
+                (m_ui_main.get_options ().get_datadir () +
+                 "/main_menu.ui");
+            m_ref_uimgr->add_ui_from_file
+                (m_ui_main.get_options ().get_datadir () +
+                 "/main_tb.ui");
             prepare_actions ();
 
             // prepare widgets

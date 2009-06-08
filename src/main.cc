@@ -17,6 +17,9 @@
 
 #include <libintl.h>
 #include <iostream>
+#include <exception>
+
+#include <glibmm/exception.h>
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -33,13 +36,19 @@ main (int argc, char **argv)
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
     textdomain (GETTEXT_PACKAGE);
 
-    // get options
-    Yatta::Options options;
+    try {
+        // get options
+        Yatta::Options options;
 
-    // initialize ui kit
-    Yatta::UI::Main ui_kit (argc, argv, options);
+        // initialize ui kit
+        Yatta::UI::Main ui_kit (argc, argv, options);
 
-    // run main loop
-    ui_kit.run ();
+        // run main loop
+        ui_kit.run ();
+    } catch (std::exception &e) {
+        std::cerr << e.what () << std::endl;
+    } catch (Glib::Exception &e) {
+        std::cerr << e.what () << std::endl;
+    }
     return 0;
 }
