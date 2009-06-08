@@ -32,7 +32,7 @@ namespace Yatta
             public Gtk::Window
         {
             public:
-                MainWindow (Main &ui_main);
+                explicit MainWindow (Main &ui_main);
 
             protected:
                 /**
