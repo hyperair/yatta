@@ -1,1 +1,2 @@
 src/yatta/options.cc
+src/yatta/ui/mainwindow.cc
