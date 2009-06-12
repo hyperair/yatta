@@ -8,3 +8,4 @@ yatta_CXXFLAGS += \
 	-DDATADIR=\""$(pkgdatadir)"\"
 
 include src/yatta/ui/Makefile.am
+include src/yatta/curl/Makefile.am

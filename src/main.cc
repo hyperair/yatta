@@ -27,6 +27,7 @@
 
 #include "yatta/options.h"
 #include "yatta/ui/main.h"
+#include "yatta/curl/manager.h"
 
 int
 main (int argc, char **argv)
@@ -35,6 +36,9 @@ main (int argc, char **argv)
     bindtextdomain (GETTEXT_PACKAGE, PROGRAMNAME_LOCALEDIR);
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
     textdomain (GETTEXT_PACKAGE);
+
+    // initialize curl backend
+    Yatta::Curl::Manager backendmgr;
 
     try {
         // get options
@@ -50,5 +54,6 @@ main (int argc, char **argv)
     } catch (Glib::Exception &e) {
         std::cerr << e.what () << std::endl;
     }
+
     return 0;
 }
