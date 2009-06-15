@@ -24,7 +24,7 @@ namespace Yatta
         Manager::Manager () :
             m_multihandle (NULL),
             m_sharehandle (NULL),
-            m_running_handles (0),
+            m_running_handles (0)
         {
             curl_global_init (CURL_GLOBAL_ALL);
             m_multihandle = curl_multi_init ();
@@ -44,6 +44,21 @@ namespace Yatta
         {
             curl_multi_remove_handle (m_multihandle, handle);
             m_running_handles--;
+        }
+
+        void
+        Manager::perform ()
+        {
+            int prev_running_handles = m_running_handles;
+            while (curl_multi_perform (m_multihandle,
+                                       &m_running_handles) ==
+                   CURLM_CALL_MULTI_PERFORM)
+            {
+                if (prev_running_handles != m_running_handles)
+                {
+                    // TODO: handle finished handle(s)
+                }
+            }
         }
 
         Manager::~Manager ()

@@ -31,6 +31,7 @@ namespace Yatta
                 Manager ();
                 void add_handle (CURL *handle);
                 void remove_handle (CURL *handle);
+                void perform ();
                 virtual ~Manager ();
             private:
                 CURLM *m_multihandle; // only multi handle which will be used
