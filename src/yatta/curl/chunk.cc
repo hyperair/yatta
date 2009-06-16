@@ -1,4 +1,4 @@
-/*      manager.h -- part of the Yatta! Download Manager
+/*      chunk.cc -- part of the Yatta! Download Manager
  *      Copyright (C) 2009, Chow Loong Jin <hyperair@gmail.com>
  *  
  *      This program is free software: you can redistribute it and/or modify
@@ -15,32 +15,17 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef YATTA_CURL_MANAGER_H
-#define YATTA_CURL_MANAGER_H
-
-#include <curl/multi.h>
-#include <curl/curl.h>
-
-#include <glibmm/dispatcher.h>
+#include "chunk.h"
+#include "download.h"
 
 namespace Yatta
 {
     namespace Curl
     {
-        class Manager
+        Chunk::Chunk (Download &parent) :
+            m_handle (curl_easy_init ()),
+            m_parent (parent)
         {
-            public:
-                Manager ();
-                void add_handle (CURL *handle);
-                void remove_handle (CURL *handle);
-                void perform ();
-                virtual ~Manager ();
-            private:
-                CURLM *m_multihandle; // only multi handle which will be used
-                CURLSH *m_sharehandle; // to share data between easy handles
-                int m_running_handles; // number of running handles
-                Glib::Dispatcher m_curl_ready;
-        };
+        }
     };
 };
-#endif // YATTA_CURL_MANAGER_H

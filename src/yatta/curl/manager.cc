@@ -24,11 +24,18 @@ namespace Yatta
         Manager::Manager () :
             m_multihandle (NULL),
             m_sharehandle (NULL),
-            m_running_handles (0)
+            m_running_handles (0),
+            m_curl_ready ()
         {
+            // must initialize curl globally first!
             curl_global_init (CURL_GLOBAL_ALL);
+
+            // then initialize the curl handles
             m_multihandle = curl_multi_init ();
             m_sharehandle = curl_share_init ();
+
+            // connect perform function to dispatcher
+            m_curl_ready.connect (sigc::mem_fun (*this, &Manager::perform));
         }
 
         void
@@ -58,6 +65,7 @@ namespace Yatta
                 {
                     // TODO: handle finished handle(s)
                 }
+                prev_running_handles = m_running_handles;
             }
         }
 

@@ -37,6 +37,9 @@ main (int argc, char **argv)
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
     textdomain (GETTEXT_PACKAGE);
 
+    // initialize Glib threads
+    Glib::thread_init ();
+
     // initialize curl backend
     Yatta::Curl::Manager backendmgr;
 
