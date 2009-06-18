@@ -19,6 +19,7 @@
 #include <iostream>
 #include <exception>
 
+#include <glibmm/thread.h>
 #include <glibmm/exception.h>
 
 #ifdef HAVE_CONFIG_H
