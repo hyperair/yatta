@@ -26,6 +26,41 @@ namespace Yatta
             m_handle (curl_easy_init ()),
             m_parent (parent)
         {
+            // make curl pass this into the callbacks
+            curl_easy_setopt (m_handle, CURLOPT_WRITEDATA, this);
+            curl_easy_setopt (m_handle, CURLOPT_PROGRESSDATA, this);
+            curl_easy_setopt (m_handle, CURLOPT_HEADERDATA, this);
+
+            // bind the callbacks
+            curl_easy_setopt (m_handle, CURLOPT_WRITEFUNCTION, &write_cb);
+            curl_easy_setopt (m_handle, CURLOPT_PROGRESSFUNCTION, &progress_cb);
+            curl_easy_setopt (m_handle, CURLOPT_HEADERFUNCTION, &header_cb);
+        }
+
+        Chunk::~Chunk ()
+        {
+        }
+
+        CURL *Chunk::get_handle ()
+        {
+            return m_handle;
+        }
+
+        size_t
+        header_cb (void *data, size_t size, size_t nmemb, void *obj)\
+        {
+        }
+
+        size_t
+        progress_cb (void *obj,
+                double dltotal, double dlnow,
+                double ultotal, double ulnow)
+        {
+        }
+
+        size_t
+        write_cb (void *data, size_t size, size_t nmemb, void *obj)
+        {
         }
     };
 };
