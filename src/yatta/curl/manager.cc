@@ -16,6 +16,7 @@
  */
 
 #include "manager.h"
+#include "chunk.h"
 
 namespace Yatta
 {
@@ -25,6 +26,7 @@ namespace Yatta
             m_multihandle (NULL),
             m_sharehandle (NULL),
             m_running_handles (0),
+            m_chunkmap (),
             m_curl_ready ()
         {
             // must initialize curl globally first!
@@ -39,17 +41,25 @@ namespace Yatta
         }
 
         void
-        Manager::add_handle (CURL *handle)
+        Manager::add_handle (Chunk::Ptr chunk)
         {
-            curl_easy_setopt (handle, CURLOPT_SHARE, m_sharehandle);
+            CURL *handle = chunk->get_handle ();
+
+            curl_easy_setopt (handle,
+                    CURLOPT_SHARE,
+                    m_sharehandle);
             curl_multi_add_handle (m_multihandle, handle);
+            m_chunkmap.insert (std::make_pair (handle, chunk));
             m_running_handles++;
         }
 
         void
-        Manager::remove_handle (CURL *handle)
+        Manager::remove_handle (Chunk::Ptr chunk)
         {
+            CURL *handle = chunk->get_handle ();
+
             curl_multi_remove_handle (m_multihandle, handle);
+            m_chunkmap.erase (handle);
             m_running_handles--;
         }
 

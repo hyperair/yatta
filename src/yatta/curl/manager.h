@@ -18,10 +18,15 @@
 #ifndef YATTA_CURL_MANAGER_H
 #define YATTA_CURL_MANAGER_H
 
+#include <tr1/memory>
+#include <map>
+
 #include <curl/multi.h>
 #include <curl/curl.h>
 
 #include <glibmm/dispatcher.h>
+
+#include "chunk.h"
 
 namespace Yatta
 {
@@ -31,15 +36,18 @@ namespace Yatta
         {
             public:
                 Manager ();
-                void add_handle (CURL *handle);
-                void remove_handle (CURL *handle);
+                void add_handle (Chunk::Ptr chunk);
+                void remove_handle (Chunk::Ptr chunk);
                 void perform ();
                 virtual ~Manager ();
             private:
                 CURLM *m_multihandle; // only multi handle which will be used
                 CURLSH *m_sharehandle; // to share data between easy handles
+
                 int m_running_handles; // number of running handles
-                Glib::Dispatcher m_curl_ready;
+                std::map<CURL*, Chunk::Ptr> m_chunkmap;
+
+                Glib::Dispatcher m_curl_ready; // call curl_multi_perform
         };
     };
 };
