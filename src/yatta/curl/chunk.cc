@@ -47,19 +47,19 @@ namespace Yatta
         }
 
         size_t
-        header_cb (void *data, size_t size, size_t nmemb, void *obj)\
+        Chunk::header_cb (void *data, size_t size, size_t nmemb, void *obj)
         {
         }
 
         size_t
-        progress_cb (void *obj,
+        Chunk::progress_cb (void *obj,
                 double dltotal, double dlnow,
                 double ultotal, double ulnow)
         {
         }
 
         size_t
-        write_cb (void *data, size_t size, size_t nmemb, void *obj)
+        Chunk::write_cb (void *data, size_t size, size_t nmemb, void *obj)
         {
         }
     };
