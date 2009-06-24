@@ -25,6 +25,7 @@
 #include <curl/curl.h>
 
 #include <glibmm/dispatcher.h>
+#include <glibmm/thread.h>
 
 #include "chunk.h"
 
@@ -48,6 +49,10 @@ namespace Yatta
                 std::map<CURL*, Chunk::Ptr> m_chunkmap;
 
                 Glib::Dispatcher m_curl_ready; // call curl_multi_perform
+                Glib::Mutex m_multihandle_mutex; // lock for multihandle
+                volatile bool m_exiting; // tell thread to exit
+
+                void select_thread ();
         };
     };
 };

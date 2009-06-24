@@ -27,7 +27,8 @@ namespace Yatta
             m_sharehandle (NULL),
             m_running_handles (0),
             m_chunkmap (),
-            m_curl_ready ()
+            m_curl_ready (),
+            m_multihandle_mutex ()
         {
             // must initialize curl globally first!
             curl_global_init (CURL_GLOBAL_ALL);
@@ -38,6 +39,11 @@ namespace Yatta
 
             // connect perform function to dispatcher
             m_curl_ready.connect (sigc::mem_fun (*this, &Manager::perform));
+        }
+
+        Manager::~Manager ()
+        {
+            curl_global_cleanup ();
         }
 
         void
@@ -66,6 +72,7 @@ namespace Yatta
         void
         Manager::perform ()
         {
+            Glib::Mutex::Lock lock (m_multihandle_mutex); // lock multihandle
             int prev_running_handles = m_running_handles;
             while (curl_multi_perform (m_multihandle,
                                        &m_running_handles) ==
@@ -79,9 +86,41 @@ namespace Yatta
             }
         }
 
-        Manager::~Manager ()
+        void
+        Manager::select_thread ()
         {
-            curl_global_cleanup ();
+            fd_set read_fds, write_fds, error_fds;
+            int nfds; // number of FDs
+            long timeout; // timeout in ms
+            struct timeval tv; // timeout to be passed into select
+
+            // loop until we want to exit
+            while (!m_exiting)
+            {
+                FD_ZERO (&read_fds);
+                FD_ZERO (&write_fds);
+                FD_ZERO (&error_fds);
+
+                // grab information from curl for select()
+                {
+                    Glib::Mutex::Lock lock (m_multihandle_mutex);
+                    curl_multi_fdset (m_multihandle, &read_fds, &write_fds,
+                            &error_fds, &nfds);
+                    curl_multi_timeout (m_multihandle, &timeout);
+                }
+
+                if (nfds == -1)
+                    continue;
+
+                // convert milliseconds into timeval
+                tv.tv_sec = timeout * 1000;
+                tv.tv_usec = timeout / 1000;
+
+                // call curl if timeout or fd ready
+                select (nfds, &read_fds, &write_fds, &error_fds, &tv);
+
+                m_curl_ready.emit ();
+            }
         }
     };
 };
