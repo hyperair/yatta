@@ -18,6 +18,9 @@
 #include "manager.h"
 #include "chunk.h"
 
+#include <glibmm/timer.h>
+#include <iostream>
+
 namespace Yatta
 {
     namespace Curl
@@ -28,7 +31,11 @@ namespace Yatta
             m_running_handles (0),
             m_chunkmap (),
             m_curl_ready (),
-            m_multihandle_mutex ()
+            m_multihandle_mutex (),
+            m_multihandle_notempty (),
+            m_exiting (false),
+            m_select_thread (NULL)
+
         {
             // must initialize curl globally first!
             curl_global_init (CURL_GLOBAL_ALL);
@@ -39,10 +46,18 @@ namespace Yatta
 
             // connect perform function to dispatcher
             m_curl_ready.connect (sigc::mem_fun (*this, &Manager::perform));
+
+            // start thread
+            m_select_thread = Glib::Thread::create 
+                (sigc::mem_fun (*this, &Manager::select_thread), true);
         }
 
         Manager::~Manager ()
         {
+            m_exiting = true;
+            // wake up the sleeping thread (if it is) before joining
+            m_multihandle_notempty.broadcast ();
+            m_select_thread->join ();
             curl_global_cleanup ();
         }
 
@@ -54,9 +69,15 @@ namespace Yatta
             curl_easy_setopt (handle,
                     CURLOPT_SHARE,
                     m_sharehandle);
-            curl_multi_add_handle (m_multihandle, handle);
+            {
+                Glib::Mutex::Lock lock (m_multihandle_mutex);
+                curl_multi_add_handle (m_multihandle, handle);
+            }
+
             m_chunkmap.insert (std::make_pair (handle, chunk));
             m_running_handles++;
+
+            m_multihandle_notempty.broadcast ();
         }
 
         void
@@ -64,9 +85,14 @@ namespace Yatta
         {
             CURL *handle = chunk->get_handle ();
 
-            curl_multi_remove_handle (m_multihandle, handle);
+            {
+                Glib::Mutex::Lock lock (m_multihandle_mutex);
+                curl_multi_remove_handle (m_multihandle, handle);
+            }
             m_chunkmap.erase (handle);
             m_running_handles--;
+
+            m_multihandle_notempty.broadcast ();
         }
 
         void
@@ -104,10 +130,21 @@ namespace Yatta
                 // grab information from curl for select()
                 {
                     Glib::Mutex::Lock lock (m_multihandle_mutex);
-                    curl_multi_fdset (m_multihandle, &read_fds, &write_fds,
-                            &error_fds, &nfds);
+
+                    // wait here until there are handles, or time to exit
+                    while (curl_multi_fdset (m_multihandle, &read_fds, &write_fds, 
+                                &error_fds, &nfds), nfds == -1 &&
+                            !m_exiting)
+                        m_multihandle_notempty.wait (m_multihandle_mutex);
+
+                    // if it's time to exit, just do so already
+                    if (m_exiting)
+                        throw Glib::Thread::Exit();
+
+                    // then get the timeout
                     curl_multi_timeout (m_multihandle, &timeout);
                 }
+                std::cerr << "timeout = " << timeout << std::endl;
 
                 if (nfds == -1)
                     continue;
@@ -117,7 +154,11 @@ namespace Yatta
                 tv.tv_usec = timeout / 1000;
 
                 // call curl if timeout or fd ready
-                select (nfds, &read_fds, &write_fds, &error_fds, &tv);
+                select (nfds,
+                        &read_fds,
+                        &write_fds,
+                        &error_fds,
+                        (timeout<0)?NULL:&tv);
 
                 m_curl_ready.emit ();
             }

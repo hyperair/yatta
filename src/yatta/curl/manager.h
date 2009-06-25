@@ -50,7 +50,9 @@ namespace Yatta
 
                 Glib::Dispatcher m_curl_ready; // call curl_multi_perform
                 Glib::Mutex m_multihandle_mutex; // lock for multihandle
+                Glib::Cond m_multihandle_notempty; // not empty || exit time
                 volatile bool m_exiting; // tell thread to exit
+                Glib::Thread *m_select_thread; // select thread
 
                 void select_thread ();
         };
