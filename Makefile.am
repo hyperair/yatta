@@ -6,7 +6,7 @@ run: yatta
 	./yatta --datadir="$(top_srcdir)/data"
 
 gdb: yatta
-	gdb ./yatta --datadir="$(top_srcdir)/data"
+	gdb --args ./yatta --datadir="$(top_srcdir)/data"
 
 valgrind: yatta
 	valgrind ./yatta --datadir="$(top_srcdir)/data"
