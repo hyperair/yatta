@@ -19,7 +19,6 @@
 #include "chunk.h"
 
 #include <glibmm/timer.h>
-#include <iostream>
 
 namespace Yatta
 {
@@ -132,8 +131,9 @@ namespace Yatta
                     Glib::Mutex::Lock lock (m_multihandle_mutex);
 
                     // wait here until there are handles, or time to exit
-                    while (curl_multi_fdset (m_multihandle, &read_fds, &write_fds, 
-                                &error_fds, &nfds), nfds == -1 &&
+                    while (curl_multi_fdset (m_multihandle,
+                                &read_fds, &write_fds, &error_fds, &nfds),
+                            nfds == -1 &&
                             !m_exiting)
                         m_multihandle_notempty.wait (m_multihandle_mutex);
 
@@ -144,7 +144,6 @@ namespace Yatta
                     // then get the timeout
                     curl_multi_timeout (m_multihandle, &timeout);
                 }
-                std::cerr << "timeout = " << timeout << std::endl;
 
                 if (nfds == -1)
                     continue;
