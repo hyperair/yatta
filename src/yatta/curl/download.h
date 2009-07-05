@@ -18,6 +18,11 @@
 #ifndef YATTA_CURL_DOWNLOAD_H
 #define YATTA_CURL_DOWNLOAD_H
 
+#include <list>
+#include <glibmm/ustring.h>
+
+#include "chunk.h"
+
 namespace Yatta
 {
     namespace Curl
@@ -25,10 +30,14 @@ namespace Yatta
         class Download
         {
             public:
-                Download ();
+                Download (const Glib::ustring &url);
+                void add_chunk (); // increases number of running chunks
+                void remove_chunk (); // decreases number of running chunks
                 virtual ~Download ();
 
             private:
+                const Glib::ustring m_url;
+                std::list<Chunk::Ptr> m_chunks;
         };
     };
 };

@@ -21,6 +21,22 @@ namespace Yatta
 {
     namespace Curl
     {
+        Download::Download (const Glib::ustring &url) :
+            m_url (url)
+        {
+        }
 
+        Download::~Download ()
+        {
+        }
+
+        void Download::add_chunk ()
+        {
+            m_chunks.push_back (Chunk::create (*this));
+        }
+
+        void Download::remove_chunk ()
+        {
+        }
     };
 };

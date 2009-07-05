@@ -37,6 +37,11 @@ namespace Yatta
             curl_easy_setopt (m_handle, CURLOPT_HEADERFUNCTION, &header_cb);
         }
 
+        Chunk::Ptr Chunk::create (Download &parent)
+        {
+            return Chunk::Ptr (new Chunk(parent));
+        }
+
         Chunk::~Chunk ()
         {
         }
@@ -49,6 +54,7 @@ namespace Yatta
         size_t
         Chunk::header_cb (void *data, size_t size, size_t nmemb, void *obj)
         {
+            reinterpret_cast<Chunk*> (obj)->m_signal_header (data, size, nmemb);
         }
 
         size_t
@@ -56,11 +62,14 @@ namespace Yatta
                 double dltotal, double dlnow,
                 double ultotal, double ulnow)
         {
+            reinterpret_cast<Chunk*> (obj)->m_signal_progress (dltotal,
+                    dlnow, ultotal, ulnow);
         }
 
         size_t
         Chunk::write_cb (void *data, size_t size, size_t nmemb, void *obj)
         {
+            reinterpret_cast<Chunk*> (obj)->m_signal_write (data, size, nmemb);
         }
     };
 };
