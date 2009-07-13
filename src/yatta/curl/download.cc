@@ -22,6 +22,7 @@ namespace Yatta
     namespace Curl
     {
         Download::Download (const Glib::ustring &url) :
+            sigc::trackable (),
             m_url (url)
         {
         }
@@ -32,7 +33,8 @@ namespace Yatta
 
         void Download::add_chunk ()
         {
-            m_chunks.push_back (Chunk::create (*this));
+            Chunk::Ptr chunk = Chunk::create (*this);
+            m_chunks.push_back (chunk);
         }
 
         void Download::remove_chunk ()

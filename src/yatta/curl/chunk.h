@@ -37,11 +37,11 @@ namespace Yatta
                 // typedefs for signals
                 typedef sigc::signal<void, 
                         void* /*data*/, size_t /*size*/,
-                        size_t /*nmemb*/> header_arrived_t;
+                        size_t /*nmemb*/> signal_header_t;
                 typedef sigc::signal<void, 
                     double /*dltotal*/, double /*dlnow*/,
-                    double /*ultotal*/, double /*ulnow*/> progress_t;
-                typedef header_arrived_t data_arrived_t;
+                    double /*ultotal*/, double /*ulnow*/> signal_progress_t;
+                typedef signal_header_t signal_write_t;
 
                 // constructor and destructor
                 explicit Chunk (Download &parent);
@@ -49,9 +49,9 @@ namespace Yatta
                 virtual ~Chunk ();
 
                 // accessor functions
-                header_arrived_t signal_header ();
-                progress_t       signal_progress ();
-                data_arrived_t   signal_write ();
+                signal_header_t signal_header ();
+                signal_progress_t       signal_progress ();
+                signal_write_t   signal_write ();
 
                 CURL *get_handle ();
             private:
@@ -59,9 +59,9 @@ namespace Yatta
                 Download &m_parent;
 
                 // signals
-                header_arrived_t m_signal_header;
-                progress_t       m_signal_progress;
-                data_arrived_t   m_signal_write;
+                signal_header_t m_signal_header;
+                signal_progress_t       m_signal_progress;
+                signal_write_t   m_signal_write;
 
                 // static curl functions
                 // header function

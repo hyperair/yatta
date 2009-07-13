@@ -27,7 +27,7 @@ namespace Yatta
 {
     namespace Curl
     {
-        class Download
+        class Download : public sigc::trackable
         {
             public:
                 Download (const Glib::ustring &url);
