@@ -28,10 +28,6 @@ namespace Yatta
             m_multihandle (NULL),
             m_sharehandle (NULL),
             m_running_handles (0),
-            m_chunkmap (),
-            m_curl_ready (),
-            m_multihandle_mutex (),
-            m_multihandle_notempty (),
             m_exiting (false),
             m_select_thread (NULL)
 

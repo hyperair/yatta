@@ -44,24 +44,28 @@ namespace Yatta
                 typedef signal_header_t signal_write_t;
 
                 // constructor and destructor
-                explicit Chunk (Download &parent);
-                static Chunk::Ptr create (Download &parent);
+                explicit Chunk (Download &parent, size_t offset=0);
+                static Chunk::Ptr create (Download &parent, size_t offset=0);
                 virtual ~Chunk ();
 
                 // accessor functions
-                signal_header_t signal_header ();
-                signal_progress_t       signal_progress ();
-                signal_write_t   signal_write ();
+                signal_header_t   signal_header ();
+                signal_progress_t signal_progress ();
+                signal_write_t    signal_write ();
+
+                size_t get_offset () const;
+                void set_offset (const size_t & arg);
 
                 CURL *get_handle ();
             private:
                 CURL *m_handle;
                 Download &m_parent;
+                size_t m_offset;
 
                 // signals
-                signal_header_t m_signal_header;
-                signal_progress_t       m_signal_progress;
-                signal_write_t   m_signal_write;
+                signal_header_t   m_signal_header;
+                signal_progress_t m_signal_progress;
+                signal_write_t    m_signal_write;
 
                 // static curl functions
                 // header function

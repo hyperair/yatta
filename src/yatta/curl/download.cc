@@ -33,12 +33,50 @@ namespace Yatta
 
         void Download::add_chunk ()
         {
-            Chunk::Ptr chunk = Chunk::create (*this);
+            Chunk::Ptr chunk (Chunk::create (*this, get_new_offset()));
             m_chunks.push_back (chunk);
         }
 
         void Download::remove_chunk ()
         {
+        }
+
+        Glib::ustring Download::get_uri ()
+        {
+            return m_uri;
+        }
+
+        void Download::set_uri (const Glib::ustring &uri)
+        {
+            m_uri = uri;
+        }
+
+        size_t Download::get_new_offset ()
+        {
+            // if no chunks already exist, start the first one
+            if (m_chunks.empty () == 0)
+                return 0;
+
+            // find biggest undownloaded gap...
+            chunk_list_t::iter biggest_gap_front;
+            size_t biggest_gap_size;
+
+            for (chunk_list_t::iter i = m_chunks.begin (), j = i + 1;
+                 j != m_chunks.end ();
+                 i = j++)
+            {
+                size_t current_gap_size = (*j)->tell () - (*i)->get_offset ();
+
+                // if current isn't bigger than previous biggest, move on
+                if (current_gap_size <= biggest_gap_size)
+                    continue;
+
+                biggest_gap_size = current_gap_size;
+                biggest_gap_front = i;
+            }
+
+            // ...and return the centre point
+            return (*biggest_gap_front)->get_offset () + biggest_gap_size / 2;
         }
     };
 };

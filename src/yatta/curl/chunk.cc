@@ -22,10 +22,15 @@ namespace Yatta
 {
     namespace Curl
     {
-        Chunk::Chunk (Download &parent) :
+        Chunk::Chunk (Download &parent, size_t offset=0) :
             m_handle (curl_easy_init ()),
-            m_parent (parent)
+            m_parent (parent),
+            m_offset (offset)
         {
+            // set some curl options...
+            curl_easy_setopt (m_handle, CURLOPT_URL, parent.get_uri ());
+            curl_easy_setopt (m_handle, CURLOPT_RESUME_FROM, offset);
+
             // make curl pass this into the callbacks
             curl_easy_setopt (m_handle, CURLOPT_WRITEDATA, this);
             curl_easy_setopt (m_handle, CURLOPT_PROGRESSDATA, this);
@@ -37,9 +42,9 @@ namespace Yatta
             curl_easy_setopt (m_handle, CURLOPT_HEADERFUNCTION, &header_cb);
         }
 
-        Chunk::Ptr Chunk::create (Download &parent)
+        Chunk::Ptr Chunk::create (Download &parent, size_t offset=0)
         {
-            return Chunk::Ptr (new Chunk(parent));
+            return Chunk::Ptr (new Chunk(parent, offset));
         }
 
         Chunk::~Chunk ()
@@ -70,6 +75,32 @@ namespace Yatta
         Chunk::write_cb (void *data, size_t size, size_t nmemb, void *obj)
         {
             reinterpret_cast<Chunk*> (obj)->m_signal_write (data, size, nmemb);
+        }
+
+        // accessor methods
+        // signals
+        signal_header_t Chunk::signal_header ()
+        {
+            return m_signal_header;
+        }
+        signal_progress_t Chunk::signal_progress ()
+        {
+            return m_signal_progress;
+        }
+        signal_write_t Chunk::signal_write ()
+        {
+            return m_signal_write;
+        }
+
+        // others
+        size_t Chunk::get_offset()
+        {
+            return m_offset;
+        }
+
+        void Chunk::set_offset (const size_t &arg)
+        {
+            m_offset = arg;
         }
     };
 };

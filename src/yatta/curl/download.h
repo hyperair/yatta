@@ -31,13 +31,20 @@ namespace Yatta
         {
             public:
                 Download (const Glib::ustring &url);
-                void add_chunk (); // increases number of running chunks
-                void remove_chunk (); // decreases number of running chunks
                 virtual ~Download ();
 
+                void add_chunk (); // increases number of running chunks
+                void remove_chunk (); // decreases number of running chunks
+
+                Glib::ustring get_uri () const;
+                void set_uri (const Glib::ustring &uri);
+
             private:
+                typedef std::list<Chunk::Ptr> chunk_list_t;
+
                 const Glib::ustring m_url;
-                std::list<Chunk::Ptr> m_chunks;
+                chunk_list_t m_chunks;
+                size_t get_new_offset ();
         };
     };
 };
