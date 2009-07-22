@@ -39,12 +39,17 @@ namespace Yatta
                 Glib::ustring get_url () const;
                 void set_url (const Glib::ustring &uri);
 
+                bool resumable() const;
+
+                size_t get_size () const;
+
             private:
                 typedef std::list<Chunk::Ptr> chunk_list_t;
 
                 Glib::ustring m_url;
                 chunk_list_t m_chunks;
-                size_t get_new_offset ();
+                bool m_resumable;
+                size_t m_size;
         };
     };
 };
