@@ -36,13 +36,13 @@ namespace Yatta
                 void add_chunk (); // increases number of running chunks
                 void remove_chunk (); // decreases number of running chunks
 
-                Glib::ustring get_uri () const;
-                void set_uri (const Glib::ustring &uri);
+                Glib::ustring get_url () const;
+                void set_url (const Glib::ustring &uri);
 
             private:
                 typedef std::list<Chunk::Ptr> chunk_list_t;
 
-                const Glib::ustring m_url;
+                Glib::ustring m_url;
                 chunk_list_t m_chunks;
                 size_t get_new_offset ();
         };

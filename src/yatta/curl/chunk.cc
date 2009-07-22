@@ -22,13 +22,14 @@ namespace Yatta
 {
     namespace Curl
     {
-        Chunk::Chunk (Download &parent, size_t offset=0) :
+        Chunk::Chunk (Download &parent, size_t offset) :
             m_handle (curl_easy_init ()),
             m_parent (parent),
             m_offset (offset)
         {
             // set some curl options...
-            curl_easy_setopt (m_handle, CURLOPT_URL, parent.get_uri ());
+            curl_easy_setopt (m_handle, CURLOPT_URL,
+                    parent.get_url ().c_str ());
             curl_easy_setopt (m_handle, CURLOPT_RESUME_FROM, offset);
 
             // make curl pass this into the callbacks
@@ -42,7 +43,7 @@ namespace Yatta
             curl_easy_setopt (m_handle, CURLOPT_HEADERFUNCTION, &header_cb);
         }
 
-        Chunk::Ptr Chunk::create (Download &parent, size_t offset=0)
+        Chunk::Ptr Chunk::create (Download &parent, size_t offset)
         {
             return Chunk::Ptr (new Chunk(parent, offset));
         }
@@ -79,21 +80,21 @@ namespace Yatta
 
         // accessor methods
         // signals
-        signal_header_t Chunk::signal_header ()
+        Chunk::signal_header_t Chunk::signal_header ()
         {
             return m_signal_header;
         }
-        signal_progress_t Chunk::signal_progress ()
+        Chunk::signal_progress_t Chunk::signal_progress ()
         {
             return m_signal_progress;
         }
-        signal_write_t Chunk::signal_write ()
+        Chunk::signal_write_t Chunk::signal_write ()
         {
             return m_signal_write;
         }
 
         // others
-        size_t Chunk::get_offset()
+        size_t Chunk::get_offset() const
         {
             return m_offset;
         }
@@ -101,6 +102,11 @@ namespace Yatta
         void Chunk::set_offset (const size_t &arg)
         {
             m_offset = arg;
+        }
+
+        size_t Chunk::tell () const
+        {
+            return m_offset;
         }
     };
 };

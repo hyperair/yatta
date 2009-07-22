@@ -55,6 +55,7 @@ namespace Yatta
 
                 size_t get_offset () const;
                 void set_offset (const size_t & arg);
+                size_t tell () const;
 
                 CURL *get_handle ();
             private:

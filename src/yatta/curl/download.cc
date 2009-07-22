@@ -41,14 +41,14 @@ namespace Yatta
         {
         }
 
-        Glib::ustring Download::get_uri ()
+        Glib::ustring Download::get_url () const
         {
-            return m_uri;
+            return m_url;
         }
 
-        void Download::set_uri (const Glib::ustring &uri)
+        void Download::set_url (const Glib::ustring &url)
         {
-            m_uri = uri;
+            m_url = url;
         }
 
         size_t Download::get_new_offset ()
@@ -58,10 +58,10 @@ namespace Yatta
                 return 0;
 
             // find biggest undownloaded gap...
-            chunk_list_t::iter biggest_gap_front;
+            chunk_list_t::iterator biggest_gap_front;
             size_t biggest_gap_size;
 
-            for (chunk_list_t::iter i = m_chunks.begin (), j = i + 1;
+            for (chunk_list_t::iterator j = m_chunks.begin (), i = j++;
                  j != m_chunks.end ();
                  i = j++)
             {
