@@ -86,8 +86,6 @@ namespace Yatta
             }
             m_chunkmap.erase (handle);
             m_running_handles--;
-
-            m_multihandle_notempty.broadcast ();
         }
 
         void
