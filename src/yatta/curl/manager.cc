@@ -147,7 +147,7 @@ namespace Yatta
                 tv.tv_usec = timeout / 1000;
 
                 // call curl if timeout or fd ready
-                select (nfds,
+                select (nfds+1,
                         &read_fds,
                         &write_fds,
                         &error_fds,
