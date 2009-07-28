@@ -27,10 +27,13 @@ namespace Yatta
 {
     namespace Curl
     {
+        // forward declaration
+        class Manager;
+
         class Download : public sigc::trackable
         {
             public:
-                Download (const Glib::ustring &url);
+                Download (const Glib::ustring &url, Manager &mgr);
                 virtual ~Download ();
 
                 void add_chunk (); // increases number of running chunks
@@ -46,10 +49,23 @@ namespace Yatta
             private:
                 typedef std::list<Chunk::Ptr> chunk_list_t;
 
+                Manager &m_mgr;
                 Glib::ustring m_url;
                 chunk_list_t m_chunks;
                 bool m_resumable;
                 size_t m_size;
+
+                void signal_header_cb (Chunk::Ptr chunk,
+                        void *data,
+                        size_t size,
+                        size_t nmemb);
+                void signal_progress_cb (Chunk::Ptr chunk,
+                        double dltotal,
+                        double dlnow);
+                void signal_write_cb (Chunk::Ptr chunk,
+                        void *data,
+                        size_t size,
+                        size_t nmemb);
         };
     };
 };
