@@ -139,9 +139,6 @@ namespace Yatta
                     curl_multi_timeout (m_multihandle, &timeout);
                 }
 
-                if (nfds == -1)
-                    continue;
-
                 // convert milliseconds into timeval
                 tv.tv_sec = timeout * 1000;
                 tv.tv_usec = timeout / 1000;
