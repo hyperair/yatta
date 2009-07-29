@@ -150,8 +150,9 @@ namespace Yatta
                     CURLINFO_RESPONSE_CODE,
                     &status);
             m_resumable = (status == 206);
+
+            // TODO: queue file operation (seek + write)
             // TODO: add more chunks here if the limit hasn't been reached
-            // TODO: actually write to file
         }
     };
 };
