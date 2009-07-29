@@ -95,13 +95,10 @@ namespace Yatta
             int prev_running_handles = m_running_handles;
             while (curl_multi_perform (m_multihandle,
                                        &m_running_handles) ==
-                   CURLM_CALL_MULTI_PERFORM)
+                   CURLM_CALL_MULTI_PERFORM);
+            if (prev_running_handles != m_running_handles)
             {
-                if (prev_running_handles != m_running_handles)
-                {
-                    // TODO: handle finished handle(s)
-                }
-                prev_running_handles = m_running_handles;
+                // TODO: handle finished handle(s)
             }
         }
 
