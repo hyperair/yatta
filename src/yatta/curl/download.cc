@@ -25,26 +25,48 @@ namespace Yatta
 {
     namespace Curl
     {
+        // first the private class implementation
+        struct Download::Private
+        {
+            Private (const Glib::ustring &url,
+                    Manager &mgr ) :
+                mgr (mgr),
+                url (url),
+                resumable (false),
+                size (0)
+            {}
+
+            typedef std::list<Chunk::Ptr> chunk_list_t;
+
+            Manager &     mgr;
+            Glib::ustring url;
+            chunk_list_t  chunks;
+            bool          resumable;
+            size_t        size;
+        };
+
+        // constructor
         Download::Download (const Glib::ustring &url,
                 Manager &mgr) :
             sigc::trackable (),
-            m_mgr (mgr),
-            m_url (url)
+            _priv (new Private (url, mgr))
         {
         }
 
+        // destructor
         Download::~Download ()
         {
         }
 
+        // increase number of running chunks
         void Download::add_chunk ()
         {
             // first we have to find the new chunk's offset.
             size_t new_offset;
-            chunk_list_t::iterator iter_chunk_before;
+            Private::chunk_list_t::iterator iter_chunk_before;
 
             // if no chunks already exist, we start from the beginning
-            if (m_chunks.empty ())
+            if (_priv->chunks.empty ())
                 new_offset = 0;
             else if (resumable ())
             {
@@ -53,8 +75,9 @@ namespace Yatta
 
                 // use two iterators at once, since we're looking at each
                 // undownloaded gap
-                for (chunk_list_t::iterator j = m_chunks.begin (), i = j++;
-                     j != m_chunks.end ();
+                for (Private::chunk_list_t::iterator j = _priv->chunks.begin (),
+                        i = j++;
+                     j != _priv->chunks.end ();
                      i = j++)
                 {
                     size_t current_gap_size = (*j)->tell ()
@@ -72,7 +95,7 @@ namespace Yatta
                 // check the size between the last chunk and EOF
                 if (get_size ()-1 >= biggest_gap_size)
                 {
-                    iter_chunk_before = --m_chunks.end ();
+                    iter_chunk_before = --_priv->chunks.end ();
                     biggest_gap_size = get_size () - 1;
                 }
 
@@ -99,46 +122,58 @@ namespace Yatta
                              chunk));
 
             // insert the chunk into the list, and start the chunk downloading
-            m_chunks.insert (iter_chunk_before, chunk);
-            m_mgr.add_handle (chunk);
+            _priv->chunks.insert (iter_chunk_before, chunk);
+            _priv->mgr.add_handle (chunk);
         }
 
+        // decrease number of running chunks
         void Download::remove_chunk ()
         {
         }
 
-        Glib::ustring Download::get_url () const
+        // accessor methods
+        Glib::ustring
+        Download::get_url () const
         {
-            return m_url;
+            return _priv->url;
         }
 
-        void Download::set_url (const Glib::ustring &url)
+        void
+        Download::set_url (const Glib::ustring &url)
         {
-            m_url = url;
+            _priv->url = url;
         }
 
-        bool Download::resumable () const
+        bool
+        Download::resumable () const
         {
-            return m_resumable;
+            return _priv->resumable;
         }
 
-        size_t Download::get_size () const
+        size_t
+        Download::get_size () const
         {
-            return m_size;
+            return _priv->size;
         }
 
-        void Download::signal_header_cb (Chunk::Ptr chunk,
+        // slots for interfacing with chunks
+        void
+        Download::signal_header_cb (Chunk::Ptr chunk,
                 void *data,
                 size_t size,
                 size_t nmemb)
         {
         }
-        void Download::signal_progress_cb (Chunk::Ptr chunk,
+
+        void
+        Download::signal_progress_cb (Chunk::Ptr chunk,
                 double dltotal,
                 double dlnow)
         {
         }
-        void Download::signal_write_cb (Chunk::Ptr chunk,
+
+        void
+        Download::signal_write_cb (Chunk::Ptr chunk,
                 void *data,
                 size_t size,
                 size_t nmemb)
@@ -149,7 +184,7 @@ namespace Yatta
             curl_easy_getinfo (chunk->get_handle (),
                     CURLINFO_RESPONSE_CODE,
                     &status);
-            m_resumable = (status == 206);
+            _priv->resumable = (status == 206);
 
             // TODO: queue file operation (seek + write)
             // TODO: add more chunks here if the limit hasn't been reached

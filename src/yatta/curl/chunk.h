@@ -32,9 +32,8 @@ namespace Yatta
         class Chunk
         {
             public:
+                // typedefs
                 typedef std::tr1::shared_ptr<Chunk> Ptr;
-
-                // typedefs for signals
                 typedef sigc::signal<void, 
                         void* /*data*/, size_t /*size*/,
                         size_t /*nmemb*/> signal_header_t;
@@ -43,10 +42,10 @@ namespace Yatta
                     double /*ultotal*/, double /*ulnow*/> signal_progress_t;
                 typedef signal_header_t signal_write_t;
 
-                // constructor and destructor
+                // constructors and destructor
                 explicit Chunk (Download &parent, size_t offset=0);
-                static Chunk::Ptr create (Download &parent, size_t offset=0);
-                virtual ~Chunk ();
+                static   Chunk::Ptr create (Download &parent, size_t offset=0);
+                virtual  ~Chunk ();
 
                 // accessor functions
                 signal_header_t   signal_header ();
@@ -54,21 +53,12 @@ namespace Yatta
                 signal_write_t    signal_write ();
 
                 size_t get_offset () const;
-                void set_offset (const size_t & arg);
+                void   set_offset (const size_t & arg);
                 size_t tell () const;
 
-                CURL *get_handle ();
-            private:
-                CURL *m_handle;
-                Download &m_parent;
-                size_t m_offset;
+                CURL * get_handle ();
 
-                // signals
-                signal_header_t   m_signal_header;
-                signal_progress_t m_signal_progress;
-                signal_write_t    m_signal_write;
-
-                // static curl functions
+            protected:
                 // header function
                 static size_t
                 header_cb (void *data, size_t size, size_t nmemb, void *obj);
@@ -84,6 +74,10 @@ namespace Yatta
                 // write function
                 static size_t
                 write_cb (void *data, size_t size, size_t nmemb, void *obj);
+
+            private:
+                struct Private;
+                std::tr1::shared_ptr<Private> _priv;
         };
     };
 };

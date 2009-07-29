@@ -22,45 +22,113 @@ namespace Yatta
 {
     namespace Curl
     {
+        // first the private class implementation
+        struct Chunk::Private
+        {
+            // constructor
+            Private (Download &parent, size_t offset) :
+                handle (curl_easy_init ()),
+                parent (parent),
+                offset (offset),
+                signal_header (),
+                signal_progress (),
+                signal_write ()
+            {}
+
+            // data
+            CURL *handle;
+            Download &parent;
+            size_t offset;
+
+            // signals
+            signal_header_t   signal_header;
+            signal_progress_t signal_progress;
+            signal_write_t    signal_write;
+        };
+
+        // constructor
         Chunk::Chunk (Download &parent, size_t offset) :
-            m_handle (curl_easy_init ()),
-            m_parent (parent),
-            m_offset (offset)
+            _priv (new Private (parent, offset))
         {
             // set some curl options...
-            curl_easy_setopt (m_handle, CURLOPT_URL,
+            curl_easy_setopt (get_handle (), CURLOPT_URL,
                     parent.get_url ().c_str ());
-            curl_easy_setopt (m_handle, CURLOPT_RESUME_FROM, offset);
+            curl_easy_setopt (get_handle (), CURLOPT_RESUME_FROM, offset);
 
             // make curl pass this into the callbacks
-            curl_easy_setopt (m_handle, CURLOPT_WRITEDATA, this);
-            curl_easy_setopt (m_handle, CURLOPT_PROGRESSDATA, this);
-            curl_easy_setopt (m_handle, CURLOPT_HEADERDATA, this);
+            curl_easy_setopt (get_handle (), CURLOPT_WRITEDATA, this);
+            curl_easy_setopt (get_handle (), CURLOPT_PROGRESSDATA, this);
+            curl_easy_setopt (get_handle (), CURLOPT_HEADERDATA, this);
 
             // bind the callbacks
-            curl_easy_setopt (m_handle, CURLOPT_WRITEFUNCTION, &write_cb);
-            curl_easy_setopt (m_handle, CURLOPT_PROGRESSFUNCTION, &progress_cb);
-            curl_easy_setopt (m_handle, CURLOPT_HEADERFUNCTION, &header_cb);
+            curl_easy_setopt (get_handle (), CURLOPT_WRITEFUNCTION, &write_cb);
+            curl_easy_setopt (get_handle (), CURLOPT_PROGRESSFUNCTION,
+                    &progress_cb);
+            curl_easy_setopt (get_handle (), CURLOPT_HEADERFUNCTION,
+                    &header_cb);
         }
 
+        // static convenience wrapper to constructor
         Chunk::Ptr Chunk::create (Download &parent, size_t offset)
         {
             return Chunk::Ptr (new Chunk(parent, offset));
         }
 
+        // destructor
         Chunk::~Chunk ()
         {
         }
 
-        CURL *Chunk::get_handle ()
+        // signal accessors
+        Chunk::signal_header_t
+        Chunk::signal_header ()
         {
-            return m_handle;
+            return _priv->signal_header;
+        }
+
+        Chunk::signal_progress_t
+        Chunk::signal_progress ()
+        {
+            return _priv->signal_progress;
+        }
+
+        Chunk::signal_write_t
+        Chunk::signal_write ()
+        {
+            return _priv->signal_write;
+        }
+
+        // I/O status accessors
+        size_t
+        Chunk::get_offset() const
+        {
+            return _priv->offset;
+        }
+        void
+        Chunk::set_offset (const size_t &arg)
+        {
+            _priv->offset = arg;
         }
 
         size_t
+        Chunk::tell () const
+        {
+            // TODO: return the offset + size downloaded
+        }
+
+        // other accessors
+        CURL *
+        Chunk::get_handle ()
+        {
+            return _priv->handle;
+        }
+
+        // static CURL callbacks
+        size_t
         Chunk::header_cb (void *data, size_t size, size_t nmemb, void *obj)
         {
-            reinterpret_cast<Chunk*> (obj)->m_signal_header (data, size, nmemb);
+            reinterpret_cast<Chunk*> (obj)->signal_header ()
+                .emit (data, size, nmemb);
         }
 
         size_t
@@ -68,45 +136,15 @@ namespace Yatta
                 double dltotal, double dlnow,
                 double ultotal, double ulnow)
         {
-            reinterpret_cast<Chunk*> (obj)->m_signal_progress (dltotal,
-                    dlnow, ultotal, ulnow);
+            reinterpret_cast<Chunk*> (obj)->signal_progress ()
+                .emit (dltotal, dlnow, ultotal, ulnow);
         }
 
         size_t
         Chunk::write_cb (void *data, size_t size, size_t nmemb, void *obj)
         {
-            reinterpret_cast<Chunk*> (obj)->m_signal_write (data, size, nmemb);
-        }
-
-        // accessor methods
-        // signals
-        Chunk::signal_header_t Chunk::signal_header ()
-        {
-            return m_signal_header;
-        }
-        Chunk::signal_progress_t Chunk::signal_progress ()
-        {
-            return m_signal_progress;
-        }
-        Chunk::signal_write_t Chunk::signal_write ()
-        {
-            return m_signal_write;
-        }
-
-        // others
-        size_t Chunk::get_offset() const
-        {
-            return m_offset;
-        }
-
-        void Chunk::set_offset (const size_t &arg)
-        {
-            m_offset = arg;
-        }
-
-        size_t Chunk::tell () const
-        {
-            return m_offset;
+            reinterpret_cast<Chunk*> (obj)->signal_write ()
+                .emit (data, size, nmemb);
         }
     };
 };

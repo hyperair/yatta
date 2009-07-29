@@ -41,20 +41,13 @@ namespace Yatta
                 void remove_handle (Chunk::Ptr chunk);
                 void perform ();
                 virtual ~Manager ();
-            private:
-                CURLM *m_multihandle; // only multi handle which will be used
-                CURLSH *m_sharehandle; // to share data between easy handles
 
-                int m_running_handles; // number of running handles
-                std::map<CURL*, Chunk::Ptr> m_chunkmap;
-
-                Glib::Dispatcher m_curl_ready; // call curl_multi_perform
-                Glib::Mutex m_multihandle_mutex; // lock for multihandle
-                Glib::Cond m_multihandle_notempty; // not empty || exit time
-                volatile bool m_exiting; // tell thread to exit
-                Glib::Thread *m_select_thread; // select thread
-
+            protected:
                 void select_thread ();
+
+            private:
+                struct Private;
+                std::tr1::shared_ptr<Private> _priv;
         };
     };
 };

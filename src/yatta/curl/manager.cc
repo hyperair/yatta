@@ -24,35 +24,59 @@ namespace Yatta
 {
     namespace Curl
     {
-        Manager::Manager () :
-            m_multihandle (NULL),
-            m_sharehandle (NULL),
-            m_running_handles (0),
-            m_exiting (false),
-            m_select_thread (NULL)
+        struct Manager::Private
+        {
+            Private () :
+                multihandle (NULL),
+                sharehandle (NULL),
+                running_handles (0),
+                exiting (false),
+                select_thread (NULL)
+            {}
 
+            CURLM *multihandle; // only multi handle which will be used
+            CURLSH *sharehandle; // to share data between easy handles
+
+            int running_handles; // number of running handles
+            std::map<CURL*, Chunk::Ptr> chunkmap;
+
+            Glib::Dispatcher curl_ready; // call curl_multi_perform
+            Glib::Mutex multihandle_mutex; // lock for multihandle
+            Glib::Cond multihandle_notempty; // not empty || exit time
+            volatile bool exiting; // tell thread to exit
+            Glib::Thread *select_thread; // select thread
+        };
+
+        Manager::Manager () :
+            _priv (new Private())
         {
             // must initialize curl globally first!
             curl_global_init (CURL_GLOBAL_ALL);
 
             // then initialize the curl handles
-            m_multihandle = curl_multi_init ();
-            m_sharehandle = curl_share_init ();
+           _priv->multihandle = curl_multi_init ();
+           _priv->sharehandle = curl_share_init ();
 
             // connect perform function to dispatcher
-            m_curl_ready.connect (sigc::mem_fun (*this, &Manager::perform));
+           _priv->curl_ready.connect (sigc::mem_fun (*this, &Manager::perform));
 
             // start thread
-            m_select_thread = Glib::Thread::create 
+           _priv->select_thread = Glib::Thread::create 
                 (sigc::mem_fun (*this, &Manager::select_thread), true);
         }
 
         Manager::~Manager ()
         {
-            m_exiting = true;
+            // tell the thread we're exiting
+            _priv->exiting = true;
+
             // wake up the sleeping thread (if it is) before joining
-            m_multihandle_notempty.broadcast ();
-            m_select_thread->join ();
+            _priv->multihandle_notempty.broadcast ();
+            _priv->select_thread->join ();
+
+            // now that the thread's done, clean up libcurl
+            curl_multi_cleanup (_priv->multihandle);
+            curl_share_cleanup (_priv->sharehandle);
             curl_global_cleanup ();
         }
 
@@ -63,16 +87,16 @@ namespace Yatta
 
             curl_easy_setopt (handle,
                     CURLOPT_SHARE,
-                    m_sharehandle);
+                    _priv->sharehandle);
             {
-                Glib::Mutex::Lock lock (m_multihandle_mutex);
-                curl_multi_add_handle (m_multihandle, handle);
+                Glib::Mutex::Lock lock (_priv->multihandle_mutex);
+                curl_multi_add_handle (_priv->multihandle, handle);
             }
 
-            m_chunkmap.insert (std::make_pair (handle, chunk));
-            m_running_handles++;
+            _priv->chunkmap.insert (std::make_pair (handle, chunk));
+            _priv->running_handles++;
 
-            m_multihandle_notempty.broadcast ();
+            _priv->multihandle_notempty.broadcast ();
         }
 
         void
@@ -81,22 +105,22 @@ namespace Yatta
             CURL *handle = chunk->get_handle ();
 
             {
-                Glib::Mutex::Lock lock (m_multihandle_mutex);
-                curl_multi_remove_handle (m_multihandle, handle);
+                Glib::Mutex::Lock lock (_priv->multihandle_mutex);
+                curl_multi_remove_handle (_priv->multihandle, handle);
             }
-            m_chunkmap.erase (handle);
-            m_running_handles--;
+            _priv->chunkmap.erase (handle);
+            _priv->running_handles--;
         }
 
         void
         Manager::perform ()
         {
-            Glib::Mutex::Lock lock (m_multihandle_mutex); // lock multihandle
-            int prev_running_handles = m_running_handles;
-            while (curl_multi_perform (m_multihandle,
-                                       &m_running_handles) ==
+            Glib::Mutex::Lock lock (_priv->multihandle_mutex);
+            int prev_running_handles = _priv->running_handles;
+            while (curl_multi_perform (_priv->multihandle,
+                                       &_priv->running_handles) ==
                    CURLM_CALL_MULTI_PERFORM);
-            if (prev_running_handles != m_running_handles)
+            if (prev_running_handles != _priv->running_handles)
             {
                 // TODO: handle finished handle(s)
             }
@@ -111,7 +135,7 @@ namespace Yatta
             struct timeval tv; // timeout to be passed into select
 
             // loop until we want to exit
-            while (!m_exiting)
+            while (!_priv->exiting)
             {
                 FD_ZERO (&read_fds);
                 FD_ZERO (&write_fds);
@@ -119,21 +143,22 @@ namespace Yatta
 
                 // grab information from curl for select()
                 {
-                    Glib::Mutex::Lock lock (m_multihandle_mutex);
+                    Glib::Mutex::Lock lock (_priv->multihandle_mutex);
 
                     // wait here until there are handles, or time to exit
-                    while (curl_multi_fdset (m_multihandle,
+                    while (curl_multi_fdset (_priv->multihandle,
                                 &read_fds, &write_fds, &error_fds, &nfds),
                             nfds == -1 &&
-                            !m_exiting)
-                        m_multihandle_notempty.wait (m_multihandle_mutex);
+                            !_priv->exiting)
+                        _priv->multihandle_notempty.wait 
+                            (_priv->multihandle_mutex);
 
                     // if it's time to exit, just do so already
-                    if (m_exiting)
+                    if (_priv->exiting)
                         throw Glib::Thread::Exit();
 
                     // then get the timeout
-                    curl_multi_timeout (m_multihandle, &timeout);
+                    curl_multi_timeout (_priv->multihandle, &timeout);
                 }
 
                 // convert milliseconds into timeval
@@ -147,7 +172,7 @@ namespace Yatta
                         &error_fds,
                         (timeout<0)?NULL:&tv);
 
-                m_curl_ready.emit ();
+                _priv->curl_ready.emit ();
             }
         }
     };

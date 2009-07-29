@@ -18,6 +18,7 @@
 #ifndef YATTA_CURL_DOWNLOAD_H
 #define YATTA_CURL_DOWNLOAD_H
 
+#include <tr1/memory>
 #include <list>
 #include <glibmm/ustring.h>
 
@@ -46,26 +47,24 @@ namespace Yatta
 
                 size_t get_size () const;
 
-            private:
-                typedef std::list<Chunk::Ptr> chunk_list_t;
-
-                Manager &m_mgr;
-                Glib::ustring m_url;
-                chunk_list_t m_chunks;
-                bool m_resumable;
-                size_t m_size;
-
-                void signal_header_cb (Chunk::Ptr chunk,
+            protected:
+                virtual void
+                signal_header_cb (Chunk::Ptr chunk,
                         void *data,
                         size_t size,
                         size_t nmemb);
-                void signal_progress_cb (Chunk::Ptr chunk,
+                virtual void
+                signal_progress_cb (Chunk::Ptr chunk,
                         double dltotal,
                         double dlnow);
-                void signal_write_cb (Chunk::Ptr chunk,
+                virtual void
+                signal_write_cb (Chunk::Ptr chunk,
                         void *data,
                         size_t size,
                         size_t nmemb);
+            private:
+                struct Private;
+                std::tr1::shared_ptr<Private> _priv;
         };
     };
 };
