@@ -32,7 +32,7 @@ namespace Yatta
                 running_handles (0),
                 exiting (false),
                 select_thread (NULL)
-            {}
+                {}
 
             CURLM *multihandle; // only multi handle which will be used
             CURLSH *sharehandle; // to share data between easy handles
@@ -54,14 +54,14 @@ namespace Yatta
             curl_global_init (CURL_GLOBAL_ALL);
 
             // then initialize the curl handles
-           _priv->multihandle = curl_multi_init ();
-           _priv->sharehandle = curl_share_init ();
+            _priv->multihandle = curl_multi_init ();
+            _priv->sharehandle = curl_share_init ();
 
             // connect perform function to dispatcher
-           _priv->curl_ready.connect (sigc::mem_fun (*this, &Manager::perform));
+            _priv->curl_ready.connect (sigc::mem_fun (*this, &Manager::perform));
 
             // start thread
-           _priv->select_thread = Glib::Thread::create 
+            _priv->select_thread = Glib::Thread::create 
                 (sigc::mem_fun (*this, &Manager::select_thread), true);
         }
 
@@ -86,8 +86,8 @@ namespace Yatta
             CURL *handle = chunk->get_handle ();
 
             curl_easy_setopt (handle,
-                    CURLOPT_SHARE,
-                    _priv->sharehandle);
+                              CURLOPT_SHARE,
+                              _priv->sharehandle);
             {
                 Glib::Mutex::Lock lock (_priv->multihandle_mutex);
                 curl_multi_add_handle (_priv->multihandle, handle);
@@ -147,9 +147,9 @@ namespace Yatta
 
                     // wait here until there are handles, or time to exit
                     while (curl_multi_fdset (_priv->multihandle,
-                                &read_fds, &write_fds, &error_fds, &nfds),
-                            nfds == -1 &&
-                            !_priv->exiting)
+                                             &read_fds, &write_fds, &error_fds, &nfds),
+                           nfds == -1 &&
+                           !_priv->exiting)
                         _priv->multihandle_notempty.wait 
                             (_priv->multihandle_mutex);
 
