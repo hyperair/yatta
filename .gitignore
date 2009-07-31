@@ -26,3 +26,4 @@ intltool-*.in
 po/POTFILES
 *.pot
 cscope.out
+\#*#
