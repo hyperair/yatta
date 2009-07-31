@@ -147,7 +147,8 @@ namespace Yatta
 
                     // wait here until there are handles, or time to exit
                     while (curl_multi_fdset (_priv->multihandle,
-                                             &read_fds, &write_fds, &error_fds, &nfds),
+                                             &read_fds, &write_fds,
+                                             &error_fds, &nfds),
                            nfds == -1 &&
                            !_priv->exiting)
                         _priv->multihandle_notempty.wait 
@@ -166,10 +167,7 @@ namespace Yatta
                 tv.tv_usec = timeout / 1000;
 
                 // call curl if timeout or fd ready
-                select (nfds+1,
-                        &read_fds,
-                        &write_fds,
-                        &error_fds,
+                select (nfds+1, &read_fds, &write_fds, &error_fds,
                         (timeout<0)?NULL:&tv);
 
                 _priv->curl_ready.emit ();
