@@ -20,6 +20,14 @@
 
 #include <tr1/memory>
 #include <string>
+#include <glibmm/refptr.h>
+
+// some forward decls
+namespace Gio
+{
+    class File;
+    class AyncResult;
+};
 
 namespace Yatta
 {
@@ -30,7 +38,16 @@ namespace Yatta
             public:
                 IOQueue (const std::string &dirname,
                          const std::string &filename = "");
+                void write (size_t offset, void *data, size_t size);
+                void perform ();
+                void set_filename (const std::string &filename);
                 virtual ~IOQueue ();
+
+            protected:
+                void create_file_finish
+                    (Glib::RefPtr<Gio::File> gfile,
+                     Glib::RefPtr<Gio::AsyncResult> &result);
+                void perform_finish (Glib::RefPtr<Gio::AsyncResult> &result);
 
             private:
                 struct Private;
