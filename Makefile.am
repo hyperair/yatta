@@ -18,6 +18,9 @@ cscope.out: $(yatta_SOURCES)
 tags:
 	ctags --c++-kinds=+p --fields=+iaS --extra=+q $(shell find -name '*.h')
 
+BROWSE:
+	ebrowse $(yatta_SOURCES)
+
 include src/Makefile.am
 include data/Makefile.am
 
