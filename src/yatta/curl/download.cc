@@ -19,6 +19,7 @@
 #include <sigc++/hide.h>
 
 #include "download.h"
+#include "ioqueue.h"
 #include "manager.h"
 
 namespace Yatta
@@ -33,7 +34,8 @@ namespace Yatta
                 mgr (mgr),
                 url (url),
                 resumable (false),
-                size (0)
+                size (0),
+                fileio ()
             {}
 
             typedef std::list<Chunk::Ptr> chunk_list_t;
@@ -43,6 +45,7 @@ namespace Yatta
             chunk_list_t  chunks;
             bool          resumable;
             size_t        size;
+            IOQueue       fileio;
         };
 
         // constructor
@@ -163,6 +166,16 @@ namespace Yatta
                 size_t size,
                 size_t nmemb)
         {
+            // it's initialized to false, so if we've already checked, no point
+            // checking again
+            if (_priv->resumable)
+                return;
+
+            long status;
+            curl_easy_getinfo (chunk->get_handle (),
+                               CURLINFO_RESPONSE_CODE,
+                               &status);
+            _priv->resumable = (status == 206);
         }
 
         void
@@ -186,8 +199,12 @@ namespace Yatta
                     &status);
             _priv->resumable = (status == 206);
 
-            // TODO: queue file operation (seek + write)
-            // TODO: add more chunks here if the limit hasn't been reached
+            _priv->fileio.write (chunk->tell (),
+                                 data,
+                                 size * nmemb);
+
+            if (_priv->resumable)
+                add_chunk ();
         }
     };
 };
