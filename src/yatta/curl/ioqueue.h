@@ -26,7 +26,7 @@
 namespace Gio
 {
     class File;
-    class AyncResult;
+    class AsyncResult;
 };
 
 namespace Yatta

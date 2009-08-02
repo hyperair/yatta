@@ -34,7 +34,10 @@ namespace Yatta
         class Download : public sigc::trackable
         {
             public:
-                Download (const Glib::ustring &url, Manager &mgr);
+            Download (Manager &mgr,
+                      const Glib::ustring &url,
+                      const std::string &dirname,
+                      const std::string &filename = "");
                 virtual ~Download ();
 
                 void add_chunk (); // increases number of running chunks

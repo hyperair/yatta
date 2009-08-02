@@ -29,13 +29,15 @@ namespace Yatta
         // first the private class implementation
         struct Download::Private
         {
-            Private (const Glib::ustring &url,
-                    Manager &mgr ) :
+            Private (Manager &mgr,
+                     const Glib::ustring &url,
+                     const std::string &dirname,
+                     const std::string &filename = "") :
                 mgr (mgr),
                 url (url),
                 resumable (false),
                 size (0),
-                fileio ()
+                fileio (dirname, filename)
             {}
 
             typedef std::list<Chunk::Ptr> chunk_list_t;
@@ -49,10 +51,12 @@ namespace Yatta
         };
 
         // constructor
-        Download::Download (const Glib::ustring &url,
-                Manager &mgr) :
+        Download::Download (Manager &mgr,
+                            const Glib::ustring &url,
+                            const std::string &dirname,
+                            const std::string &filename) :
             sigc::trackable (),
-            _priv (new Private (url, mgr))
+            _priv (new Private (mgr, url, dirname, filename))
         {
         }
 
