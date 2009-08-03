@@ -25,6 +25,6 @@ tags
 intltool-*.in
 po/POTFILES
 *.pot
-cscope.out
+cscope.*
 \#*#
 BROWSE
