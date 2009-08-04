@@ -37,17 +37,19 @@ namespace Yatta
                 url (url),
                 resumable (false),
                 size (0),
-                fileio (dirname, filename)
+                fileio (dirname, filename),
+                check_resumable_connection ()
             {}
 
             typedef std::list<Chunk::Ptr> chunk_list_t;
 
-            Manager &     mgr;
-            Glib::ustring url;
-            chunk_list_t  chunks;
-            bool          resumable;
-            size_t        size;
-            IOQueue       fileio;
+            Manager &        mgr;
+            Glib::ustring    url;
+            chunk_list_t     chunks;
+            bool             resumable;
+            size_t           size;
+            IOQueue          fileio;
+            sigc::connection check_resumable_connection;
         };
 
         // constructor
@@ -76,57 +78,73 @@ namespace Yatta
             if (_priv->chunks.empty ())
                 new_offset = 0;
             else if (resumable ())
-            {
-                // find biggest undownloaded gap...
-                size_t biggest_gap_size;
-
-                // use two iterators at once, since we're looking at each
-                // undownloaded gap
-                for (Private::chunk_list_t::iterator j = _priv->chunks.begin (),
-                        i = j++;
-                     j != _priv->chunks.end ();
-                     i = j++)
                 {
-                    size_t current_gap_size = (*j)->tell ()
-                                              - (*i)->get_offset ();
+                    // find biggest undownloaded gap...
+                    size_t biggest_gap_size;
 
-                    // if current isn't bigger than previous biggest, move on
-                    if (current_gap_size <= biggest_gap_size)
-                        continue;
+                    // use two iterators at once, since we're looking at each
+                    // undownloaded gap
+                    for (Private::chunk_list_t::iterator j = \
+                             _priv->chunks.begin (),
+                             i = j++;
+                         j != _priv->chunks.end ();
+                         i = j++)
+                        {
+                            size_t current_gap_size =
+                                (*j)->tell () - (*i)->get_offset ();
 
-                    // otherwise keep track of it
-                    biggest_gap_size = current_gap_size;
-                    iter_chunk_before = i;
+                            // if current isn't bigger than previous biggest, move on
+                            if (current_gap_size <= biggest_gap_size)
+                                continue;
+
+                            // otherwise keep track of it
+                            biggest_gap_size = current_gap_size;
+                            iter_chunk_before = i;
+                        }
+
+                    // check the size between the last chunk and EOF
+                    if (get_size ()-1 >= biggest_gap_size)
+                        {
+                            iter_chunk_before = --_priv->chunks.end ();
+                            biggest_gap_size = get_size () - 1;
+                        }
+
+                    // new offset is centrepoint of the largest undownloaded gap
+                    new_offset = (*iter_chunk_before)->tell ()
+                        + biggest_gap_size / 2;
                 }
-
-                // check the size between the last chunk and EOF
-                if (get_size ()-1 >= biggest_gap_size)
-                {
-                    iter_chunk_before = --_priv->chunks.end ();
-                    biggest_gap_size = get_size () - 1;
-                }
-
-                // new offset is centrepoint of the largest undownloaded gap
-                new_offset = (*iter_chunk_before)->tell ()
-                             + biggest_gap_size / 2;
-            }
 
             Chunk::Ptr chunk (Chunk::create (*this, new_offset));
 
             // connect callbacks to signals, with chunk bound to them
             chunk->signal_header ()
                 .connect (sigc::bind<0>
-                            (sigc::mem_fun (*this, &Download::signal_header_cb),
-                             chunk));
+                          (sigc::mem_fun (*this, &Download::signal_header_cb),
+                           chunk));
             chunk->signal_progress ()
-                .connect (sigc::bind<0> (sigc::hide (sigc::hide
+                .connect (sigc::bind<0>
+                          (sigc::hide
+                           (sigc::hide
                             (sigc::mem_fun (*this,
-                                 &Download::signal_progress_cb))),
-                             chunk));
+                                            &Download::signal_progress_cb))),
+                           chunk));
             chunk->signal_write ()
                 .connect (sigc::bind<0>
-                            (sigc::mem_fun (*this, &Download::signal_write_cb),
-                             chunk));
+                          (sigc::mem_fun (*this, &Download::signal_write_cb),
+                           chunk));
+
+            // if this is the first chunk, check if it's resumable
+            if (new_offset == 0)
+                _priv->check_resumable_connection =
+                    chunk->signal_header ()
+                    .connect (sigc::hide
+                              (sigc::hide
+                               (sigc::hide
+                                (sigc::bind
+                                 (sigc::mem_fun
+                                  (*this,
+                                   &Download::chunk_check_resumable),
+                                  chunk)))));
 
             // insert the chunk into the list, and start the chunk downloading
             _priv->chunks.insert (iter_chunk_before, chunk);
@@ -166,43 +184,43 @@ namespace Yatta
         // slots for interfacing with chunks
         void
         Download::signal_header_cb (Chunk::Ptr chunk,
-                void *data,
-                size_t size,
-                size_t nmemb)
+                                    void *data,
+                                    size_t size,
+                                    size_t nmemb)
         {
-            // it's initialized to false, so if we've already checked, no point
-            // checking again
-            if (_priv->resumable)
+        }
+
+        void
+        Download::chunk_check_resumable (Chunk::Ptr chunk)
+        {
+            // we only want to be called once, so disconnect the slot
+            _priv->check_resumable_connection.disconnect ();
+
+            // TODO: check ftp properly as well
+            long status;
+
+            if (curl_easy_getinfo (chunk->get_handle (),
+                                   CURLINFO_RESPONSE_CODE,
+                                   &status)
+                != CURLE_OK)
                 return;
 
-            long status;
-            curl_easy_getinfo (chunk->get_handle (),
-                               CURLINFO_RESPONSE_CODE,
-                               &status);
             _priv->resumable = (status == 206);
         }
 
         void
         Download::signal_progress_cb (Chunk::Ptr chunk,
-                double dltotal,
-                double dlnow)
+                                      double dltotal,
+                                      double dlnow)
         {
         }
 
         void
         Download::signal_write_cb (Chunk::Ptr chunk,
-                void *data,
-                size_t size,
-                size_t nmemb)
+                                   void *data,
+                                   size_t size,
+                                   size_t nmemb)
         {
-            // first check if resumable. for now, only http supported.
-            // TODO: make ftp work, and then other protocols
-            long status;
-            curl_easy_getinfo (chunk->get_handle (),
-                    CURLINFO_RESPONSE_CODE,
-                    &status);
-            _priv->resumable = (status == 206);
-
             _priv->fileio.write (chunk->tell (),
                                  data,
                                  size * nmemb);

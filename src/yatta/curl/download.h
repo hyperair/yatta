@@ -65,6 +65,8 @@ namespace Yatta
                         void *data,
                         size_t size,
                         size_t nmemb);
+                virtual void
+                chunk_check_resumable (Chunk::Ptr chunk);
             private:
                 struct Private;
                 std::tr1::shared_ptr<Private> _priv;
