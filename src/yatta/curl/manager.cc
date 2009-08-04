@@ -97,6 +97,7 @@ namespace Yatta
             _priv->running_handles++;
 
             _priv->multihandle_notempty.broadcast ();
+            chunk->signal_started ().emit ();
         }
 
         void
@@ -110,6 +111,7 @@ namespace Yatta
             }
             _priv->chunkmap.erase (handle);
             _priv->running_handles--;
+            chunk->signal_stopped ().emit ();
         }
 
         void
@@ -151,7 +153,7 @@ namespace Yatta
                                              &error_fds, &nfds),
                            nfds == -1 &&
                            !_priv->exiting)
-                        _priv->multihandle_notempty.wait 
+                        _priv->multihandle_notempty.wait
                             (_priv->multihandle_mutex);
 
                     // if it's time to exit, just do so already

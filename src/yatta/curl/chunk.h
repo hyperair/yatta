@@ -41,8 +41,10 @@ namespace Yatta
                     double /*dltotal*/, double /*dlnow*/,
                     double /*ultotal*/, double /*ulnow*/> signal_progress_t;
                 typedef signal_header_t signal_write_t;
+                typedef sigc::signal<void> signal_started_t;
+                typedef signal_started_t signal_stopped_t;
 
-                // constructors and destructor
+                // constructors and destructorp
                 explicit Chunk (Download &parent, size_t offset=0);
                 static   Chunk::Ptr create (Download &parent, size_t offset=0);
                 virtual  ~Chunk ();
@@ -51,6 +53,8 @@ namespace Yatta
                 signal_header_t   signal_header ();
                 signal_progress_t signal_progress ();
                 signal_write_t    signal_write ();
+                signal_started_t  signal_started ();
+                signal_stopped_t  signal_stopped ();
 
                 size_t get_offset () const;
                 void   set_offset (const size_t & arg);

@@ -44,6 +44,8 @@ namespace Yatta
             signal_header_t   signal_header;
             signal_progress_t signal_progress;
             signal_write_t    signal_write;
+            signal_started_t    signal_started;
+            signal_stopped_t     signal_stopped;
         };
 
         // constructor
@@ -52,7 +54,7 @@ namespace Yatta
         {
             // set some curl options...
             curl_easy_setopt (get_handle (), CURLOPT_URL,
-                    parent.get_url ().c_str ());
+                              parent.get_url ().c_str ());
             curl_easy_setopt (get_handle (), CURLOPT_RESUME_FROM, offset);
 
             // make curl pass this into the callbacks
@@ -63,9 +65,9 @@ namespace Yatta
             // bind the callbacks
             curl_easy_setopt (get_handle (), CURLOPT_WRITEFUNCTION, &write_cb);
             curl_easy_setopt (get_handle (), CURLOPT_PROGRESSFUNCTION,
-                    &progress_cb);
+                              &progress_cb);
             curl_easy_setopt (get_handle (), CURLOPT_HEADERFUNCTION,
-                    &header_cb);
+                              &header_cb);
         }
 
         // static convenience wrapper to constructor
@@ -96,6 +98,18 @@ namespace Yatta
         Chunk::signal_write ()
         {
             return _priv->signal_write;
+        }
+
+        Chunk::signal_started_t
+        Chunk::signal_started ()
+        {
+            return _priv->signal_started;
+        }
+
+        Chunk::signal_stopped_t
+        Chunk::signal_stopped ()
+        {
+            return _priv->signal_stopped;
         }
 
         // I/O status accessors
