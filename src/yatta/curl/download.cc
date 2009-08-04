@@ -79,41 +79,40 @@ namespace Yatta
             if (_priv->chunks.empty ())
                 new_offset = 0;
             else if (resumable ())
+            {
+                // find biggest undownloaded gap...
+                size_t biggest_gap_size;
+
+                // use two iterators at once, since we're looking at each
+                // undownloaded gap
+                for (Private::chunk_list_t::iterator j = _priv->chunks.begin (),
+                         i = j++;
+                     j != _priv->chunks.end ();
+                     i = j++)
                 {
-                    // find biggest undownloaded gap...
-                    size_t biggest_gap_size;
+                    size_t current_gap_size = \
+                        (*j)->tell () - (*i)->get_offset ();
 
-                    // use two iterators at once, since we're looking at each
-                    // undownloaded gap
-                    for (Private::chunk_list_t::iterator j = \
-                             _priv->chunks.begin (),
-                             i = j++;
-                         j != _priv->chunks.end ();
-                         i = j++)
-                        {
-                            size_t current_gap_size =
-                                (*j)->tell () - (*i)->get_offset ();
+                    // if current isn't bigger than previous biggest, move on
+                    if (current_gap_size <= biggest_gap_size)
+                        continue;
 
-                            // if current isn't bigger than previous biggest, move on
-                            if (current_gap_size <= biggest_gap_size)
-                                continue;
-
-                            // otherwise keep track of it
-                            biggest_gap_size = current_gap_size;
-                            iter_chunk_before = i;
-                        }
-
-                    // check the size between the last chunk and EOF
-                    if (get_size ()-1 >= biggest_gap_size)
-                        {
-                            iter_chunk_before = --_priv->chunks.end ();
-                            biggest_gap_size = get_size () - 1;
-                        }
-
-                    // new offset is centrepoint of the largest undownloaded gap
-                    new_offset = (*iter_chunk_before)->tell ()
-                        + biggest_gap_size / 2;
+                    // otherwise keep track of it
+                    biggest_gap_size = current_gap_size;
+                    iter_chunk_before = i;
                 }
+
+                // check the size between the last chunk and EOF
+                if (get_size ()-1 >= biggest_gap_size)
+                {
+                    iter_chunk_before = --_priv->chunks.end ();
+                    biggest_gap_size = get_size () - 1;
+                }
+
+                // new offset is centrepoint of the largest undownloaded gap
+                new_offset = (*iter_chunk_before)->tell ()
+                    + biggest_gap_size / 2;
+            }
 
             Chunk::Ptr chunk (Chunk::create (*this, new_offset));
 
@@ -138,14 +137,13 @@ namespace Yatta
             if (new_offset == 0)
                 _priv->check_resumable_connection =
                     chunk->signal_header ()
-                    .connect (sigc::hide
-                              (sigc::hide
-                               (sigc::hide
-                                (sigc::bind
-                                 (sigc::mem_fun
-                                  (*this,
-                                   &Download::chunk_check_resumable),
-                                  chunk)))));
+                    .connect (sigc::hide (sigc::hide
+                                          (sigc::hide
+                                           (sigc::bind
+                                            (sigc::mem_fun
+                                             (*this,
+                                              &Download::chunk_check_resumable),
+                                             chunk)))));
 
             // insert the chunk into the list, and start the chunk downloading
             _priv->chunks.insert (iter_chunk_before, chunk);
