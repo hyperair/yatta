@@ -1,4 +1,4 @@
-bin_PROGRAMS = 
+bin_PROGRAMS =
 EXTRA_DIST =
 SUBDIRS = po
 
@@ -15,13 +15,16 @@ cscope: cscope.out
 cscope.out: $(yatta_SOURCES)
 	cscope -R -b
 
-tags:
-	ctags --c++-kinds=+p --fields=+iaS --extra=+q $(shell find -name '*.h')
-
 BROWSE:
 	ebrowse $(yatta_SOURCES)
+
+# dist-hook: ChangeLog AUTHORS
+ChangeLog:
+	git log --stat > ChangeLog
+AUTHORS:
+	git log --format="%an <%ae>" | sort -u > AUTHORS
 
 include src/Makefile.am
 include data/Makefile.am
 
-.PHONY: run gdb valgrind cscope
+.PHONY: gen-ChangeLog run gdb valgrind cscope

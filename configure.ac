@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.63])
 AC_INIT([yatta], [0.1], [hyperair@gmail.com])
-AM_INIT_AUTOMAKE([-Wall gnu dist-bzip2 tar-ustar subdir-objects])
+AM_INIT_AUTOMAKE([-Wall foreign dist-bzip2 tar-ustar subdir-objects])
 
 AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_HEADERS([config.h])

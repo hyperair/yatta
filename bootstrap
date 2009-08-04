@@ -1,8 +1,4 @@
 #!/bin/sh
 
-git log --format="%an <%ae>" | sort -u > AUTHORS
-git log > ChangeLog
-[ -f NEWS ] || touch NEWS
-[ -f README ] || touch README
 autoreconf -vfi
 intltoolize -c --force
