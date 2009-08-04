@@ -56,8 +56,12 @@ namespace Yatta
                 signal_started_t  signal_started ();
                 signal_stopped_t  signal_stopped ();
 
+                // offset accessor (beginning of this chunk)
                 size_t get_offset () const;
                 void   set_offset (const size_t & arg);
+                // how many bytes in this chunk downloaded
+                size_t get_downloaded () const;
+                // current position accessor (offset + downloaded)
                 size_t tell () const;
 
                 CURL * get_handle ();

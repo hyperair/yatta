@@ -30,6 +30,8 @@ namespace Yatta
                 handle (curl_easy_init ()),
                 parent (parent),
                 offset (offset),
+                downloaded (0),
+                total (0),
                 signal_header (),
                 signal_progress (),
                 signal_write ()
@@ -39,6 +41,8 @@ namespace Yatta
             CURL *handle;
             Download &parent;
             size_t offset;
+            size_t downloaded;
+            size_t total;
 
             // signals
             signal_header_t   signal_header;
@@ -125,9 +129,15 @@ namespace Yatta
         }
 
         size_t
+        Chunk::get_downloaded () const
+        {
+            return _priv->downloaded;
+        }
+
+        size_t
         Chunk::tell () const
         {
-            // TODO: return the offset + size downloaded
+            return _priv->offset + _priv->downloaded;
         }
 
         // other accessors
@@ -150,7 +160,12 @@ namespace Yatta
                 double dltotal, double dlnow,
                 double ultotal, double ulnow)
         {
-            reinterpret_cast<Chunk*> (obj)->signal_progress ()
+            Chunk *self = reinterpret_cast<Chunk*> (obj);
+            // keep track of where we are and how much to download in order for
+            // tell () to work.
+            self->_priv->downloaded = dlnow;
+            self->_priv->total = dltotal;
+            self->signal_progress ()
                 .emit (dltotal, dlnow, ultotal, ulnow);
         }
 

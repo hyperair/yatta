@@ -15,10 +15,11 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <glibmm/dispatcher.h>
+#include <glibmm/thread.h>
+
 #include "manager.h"
 #include "chunk.h"
-
-#include <glibmm/timer.h>
 
 namespace Yatta
 {

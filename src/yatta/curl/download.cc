@@ -17,6 +17,7 @@
 
 #include <sigc++/bind.h>
 #include <sigc++/hide.h>
+#include <sigc++/connection.h>
 
 #include "download.h"
 #include "ioqueue.h"

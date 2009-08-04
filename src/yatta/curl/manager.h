@@ -21,12 +21,6 @@
 #include <tr1/memory>
 #include <map>
 
-#include <curl/multi.h>
-#include <curl/curl.h>
-
-#include <glibmm/dispatcher.h>
-#include <glibmm/thread.h>
-
 #include "chunk.h"
 
 namespace Yatta
