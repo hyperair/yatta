@@ -34,10 +34,10 @@ namespace Yatta
             public:
                 // typedefs
                 typedef std::tr1::shared_ptr<Chunk> Ptr;
-                typedef sigc::signal<void, 
+                typedef sigc::signal<void,
                         void* /*data*/, size_t /*size*/,
                         size_t /*nmemb*/> signal_header_t;
-                typedef sigc::signal<void, 
+                typedef sigc::signal<void,
                     double /*dltotal*/, double /*dlnow*/,
                     double /*ultotal*/, double /*ulnow*/> signal_progress_t;
                 typedef signal_header_t signal_write_t;
