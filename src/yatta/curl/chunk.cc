@@ -34,7 +34,8 @@ namespace Yatta
                 total (0),
                 signal_header (),
                 signal_progress (),
-                signal_write ()
+                signal_write (),
+                signal_finished ()
             {}
 
             // data
@@ -48,8 +49,9 @@ namespace Yatta
             signal_header_t   signal_header;
             signal_progress_t signal_progress;
             signal_write_t    signal_write;
-            signal_started_t    signal_started;
-            signal_stopped_t     signal_stopped;
+            signal_started_t  signal_started;
+            signal_stopped_t  signal_stopped;
+            signal_finished_t signal_finished;
         };
 
         // constructor
@@ -114,6 +116,12 @@ namespace Yatta
         Chunk::signal_stopped ()
         {
             return _priv->signal_stopped;
+        }
+
+        Chunk::signal_finished_t
+        Chunk::signal_finished ()
+        {
+            return _priv->signal_finished;
         }
 
         // I/O status accessors

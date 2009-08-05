@@ -43,6 +43,7 @@ namespace Yatta
                 typedef signal_header_t signal_write_t;
                 typedef sigc::signal<void> signal_started_t;
                 typedef signal_started_t signal_stopped_t;
+                typedef sigc::signal<void, CURLcode> signal_finished_t;
 
                 // constructors and destructorp
                 explicit Chunk (Download &parent, size_t offset=0);
@@ -50,11 +51,23 @@ namespace Yatta
                 virtual  ~Chunk ();
 
                 // accessor functions
+                // signal when header is received
                 signal_header_t   signal_header ();
+
+                // signal when libcurl calls progress function
                 signal_progress_t signal_progress ();
+
+                // signal when there is stuff to write
                 signal_write_t    signal_write ();
+
+                // signal when chunk is added to the Manager
                 signal_started_t  signal_started ();
+
+                // signal when chunk is removed from Manager
                 signal_stopped_t  signal_stopped ();
+
+                // signal when chunk has finished (might have errors)
+                signal_finished_t signal_finished ();
 
                 // offset accessor (beginning of this chunk)
                 size_t get_offset () const;
