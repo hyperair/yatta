@@ -25,6 +25,7 @@ namespace Yatta
 {
     namespace Curl
     {
+        typedef std::map<CURL*, Chunk::Ptr> chunkmap_t;
         struct Manager::Private
         {
             Private () :
@@ -39,7 +40,7 @@ namespace Yatta
             CURLSH *sharehandle; // to share data between easy handles
 
             int running_handles; // number of running handles
-            std::map<CURL*, Chunk::Ptr> chunkmap;
+            chunkmap_t chunkmap;
 
             Glib::Dispatcher curl_ready; // call curl_multi_perform
             Glib::Mutex multihandle_mutex; // lock for multihandle
@@ -59,10 +60,11 @@ namespace Yatta
             _priv->sharehandle = curl_share_init ();
 
             // connect perform function to dispatcher
-            _priv->curl_ready.connect (sigc::mem_fun (*this, &Manager::perform));
+            _priv->curl_ready.connect (sigc::mem_fun (*this,
+                                                      &Manager::perform));
 
             // start thread
-            _priv->select_thread = Glib::Thread::create 
+            _priv->select_thread = Glib::Thread::create
                 (sigc::mem_fun (*this, &Manager::select_thread), true);
         }
 
@@ -123,9 +125,24 @@ namespace Yatta
             while (curl_multi_perform (_priv->multihandle,
                                        &_priv->running_handles) ==
                    CURLM_CALL_MULTI_PERFORM);
+
             if (prev_running_handles != _priv->running_handles)
             {
-                // TODO: handle finished handle(s)
+                int msgs;
+                CURLMsg *msg = 0;
+                while (msg = curl_multi_info_read (_priv->multihandle, &msgs))
+                {
+                    CURL *handle = msg->easy_handle;
+                    CURLcode result = msg->data.result;
+                    chunkmap_t::iterator iter = _priv->chunkmap.find (handle);
+                    if (iter == _priv->chunkmap.end ())
+                        continue; // TODO: report error
+
+                    // handle removal of chunk (TODO: don't repeat code)
+                    iter->second->signal_finished ().emit (result);
+                    _priv->chunkmap.erase (iter);
+                    iter->second->signal_stopped ().emit ();
+                }
             }
         }
 
