@@ -80,7 +80,8 @@ namespace Yatta
         {
         }
 
-        void IOQueue::write (size_t offset, void *data, size_t size)
+        void
+        IOQueue::write (size_t offset, void *data, size_t size)
         {
             // perform isn't in action, so we need to start the chain
             bool need_perform = _priv->queue.empty () && !_priv->handle;
@@ -89,7 +90,8 @@ namespace Yatta
                 perform ();
         }
 
-        void IOQueue::perform ()
+        void
+        IOQueue::perform ()
         {
             // if it's empty, no point doing anything
             if (_priv->queue.empty ())
@@ -109,13 +111,15 @@ namespace Yatta
              */
         }
 
-        void IOQueue::set_filename (const std::string &filename)
+        void
+        IOQueue::set_filename (const std::string &filename)
         {
             _priv->filename = filename;
         }
 
-        void IOQueue::create_file_finish (Glib::RefPtr<Gio::File> file,
-                                          Glib::RefPtr<Gio::AsyncResult> &result)
+        void
+        IOQueue::create_file_finish (Glib::RefPtr<Gio::File> file,
+                                     Glib::RefPtr<Gio::AsyncResult> &result)
         {
             _priv->handle = file->create_file_finish (result);
 
@@ -124,7 +128,8 @@ namespace Yatta
                 perform ();
         }
 
-        void IOQueue::perform_finish (Glib::RefPtr<Gio::AsyncResult> &result)
+        void
+        IOQueue::perform_finish (Glib::RefPtr<Gio::AsyncResult> &result)
         {
             // we're handling this item now. delete it from queue
             delete _priv->queue.front ().data;
