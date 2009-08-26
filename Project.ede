@@ -1,0 +1,8 @@
+;; Object ede-proj-project
+;; EDE project file.
+(ede-proj-project "ede-proj-project"
+  :name "yatta"
+  :file "Project.ede"
+  :targets 'nil
+  :makefile-type 'Makefile.am
+  )
