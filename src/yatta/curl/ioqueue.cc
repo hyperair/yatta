@@ -132,7 +132,7 @@ namespace Yatta
         IOQueue::perform_finish (Glib::RefPtr<Gio::AsyncResult> &result)
         {
             // we're handling this item now. delete it from queue
-            delete _priv->queue.front ().data;
+            operator delete (_priv->queue.front ().data);
             _priv->queue.pop_front ();
 
             // grab result (and check for error), then start the next operation
