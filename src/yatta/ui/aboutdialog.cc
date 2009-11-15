@@ -35,7 +35,8 @@ namespace Yatta
 
             set_program_name ("Yatta!");
             set_version (VERSION);
-            set_copyright ("Copyright Ⓒ 2009, Chow Loong Jin <hyperair@gmail.com>");
+            set_copyright ("Copyright © 2009, "
+                           "Chow Loong Jin <hyperair@gmail.com>");
             set_authors (authors);
         }
 
