@@ -28,7 +28,7 @@ AC_SUBST(PROGRAMNAME_LOCALEDIR)
 dnl end i18n bits
 
 dnl program dependencies
-PKG_CHECK_MODULES([GTKMM], [gtkmm-2.4 gthread-2.0])
+PKG_CHECK_MODULES([GTKMM], [gtkmm-2.4])
 PKG_CHECK_MODULES([CURL], [libcurl])
 
 AC_CONFIG_FILES([

@@ -1,16 +1,16 @@
 /*      manager.h -- part of the Yatta! Download Manager
  *      Copyright (C) 2009, Chow Loong Jin <hyperair@gmail.com>
- *  
+ *
  *      This program is free software: you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
  *      the Free Software Foundation, either version 3 of the License, or
  *      (at your option) any later version.
- *  
+ *
  *      This program is distributed in the hope that it will be useful,
  *      but WITHOUT ANY WARRANTY; without even the implied warranty of
  *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *      GNU General Public License for more details.
- *  
+ *
  *      You should have received a copy of the GNU General Public License
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -21,13 +21,15 @@
 #include <tr1/memory>
 #include <map>
 
+#include <glibmm/main.h>
+
 #include "chunk.h"
 
 namespace Yatta
 {
     namespace Curl
     {
-        class Manager
+        class Manager : public Glib::Source
         {
             public:
                 Manager ();
@@ -37,7 +39,15 @@ namespace Yatta
                 virtual ~Manager ();
 
             protected:
-                void select_thread ();
+                static int socket_cb (CURL *easy, // easy handle
+                                      curl_socket_t s, // socket
+                                      int action, // action mask
+                                      void *userp, // private callback pointer
+                                      void *socketp); // private socket pointer
+
+                virtual bool prepare (int &timeout);
+                virtual bool check ();
+                virtual bool dispatch (sigc::slot_base *slot);
 
             private:
                 struct Private;
