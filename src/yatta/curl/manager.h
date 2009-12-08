@@ -39,12 +39,18 @@ namespace Yatta
                 virtual ~Manager ();
 
             protected:
+                // internal remove_handle functions
+                void remove_handle (CURL *chunk);
+                void remove_handle (std::map <CURL*,Chunk::Ptr>::iterator iter);
+
+                // internal socket callback function for passing into libcurl
                 static int socket_cb (CURL *easy, // easy handle
                                       curl_socket_t s, // socket
                                       int action, // action mask
                                       void *userp, // private callback pointer
                                       void *socketp); // private socket pointer
 
+                // implementation of the Glib::Source class
                 virtual bool prepare (int &timeout);
                 virtual bool check ();
                 virtual bool dispatch (sigc::slot_base *slot);
