@@ -44,7 +44,7 @@ namespace Yatta
             datadir_entry.set_long_name ("datadir");
             datadir_entry.set_description
                 (Glib::ustring (_("Override data directory") )
-                 + " [" + DATADIR + "]");
+                 + " [" DATADIR "]");
             _priv->maingroup.add_entry (datadir_entry, _priv->datadir);
         }
 
