@@ -117,18 +117,6 @@ namespace Yatta
             chunk->signal_stopped ().emit ();
         }
 
-        void Manager::perform ()
-        {
-            int prev_running_handles = _priv->running_handles;
-            while (curl_multi_perform (_priv->multihandle,
-                                       &_priv->running_handles) ==
-                   CURLM_CALL_MULTI_PERFORM);
-
-            if (prev_running_handles != _priv->running_handles)
-            {
-            }
-        }
-
         int Manager::socket_cb (CURL *easy,
                    curl_socket_t s,
                    int action,

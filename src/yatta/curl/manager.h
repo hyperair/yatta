@@ -36,7 +36,6 @@ namespace Yatta
                 static Glib::RefPtr<Manager> create ();
                 void add_handle (Chunk::Ptr chunk);
                 void remove_handle (Chunk::Ptr chunk);
-                void perform ();
                 virtual ~Manager ();
 
             protected:
