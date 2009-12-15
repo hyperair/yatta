@@ -16,6 +16,7 @@
  */
 
 #include <glibmm/dispatcher.h>
+#include <iostream>
 
 #include "manager.h"
 #include "chunk.h"
@@ -44,7 +45,8 @@ namespace Yatta
         };
 
         Manager::Manager () :
-            _priv (new Private())
+            _priv (new Private()),
+            Glib::Source ()
         {
             // must initialize curl globally first!
             curl_global_init (CURL_GLOBAL_ALL);
@@ -59,6 +61,16 @@ namespace Yatta
                                &Manager::socket_cb);
 
             set_can_recurse (true);
+
+            // this is to prevent glibmm from segfaulting
+            connect_generic (
+                sigc::slot<bool, sigc::slot_base *> (
+                    sigc::mem_fun (*this, &Manager::dispatch)));
+        }
+
+        Glib::RefPtr<Manager> Manager::create ()
+        {
+            return Glib::RefPtr<Manager> (new Manager ());
         }
 
         Manager::~Manager ()
@@ -176,16 +188,19 @@ namespace Yatta
             long timeout2;
             timeout = curl_multi_timeout (_priv->multihandle, &timeout2);
             timeout = static_cast<int> (timeout2);
+
             return (timeout == 0);
         }
 
         bool
         Manager::check ()
         {
+            // we're ready if we've timed out..
             long timeout;
             curl_multi_timeout (_priv->multihandle, &timeout);
             if (timeout == 0) return true;
 
+            // or if we've got activity on one poll
             for (pollmap_t::iterator i = _priv->pollmap.begin ();
                  i != _priv->pollmap.end ();
                  ++i)
@@ -193,6 +208,8 @@ namespace Yatta
                 if (i->second->get_revents ())
                     return true;
             }
+
+            return false;
         }
 
         bool
@@ -228,7 +245,7 @@ namespace Yatta
                                           CURL_SOCKET_TIMEOUT,
                                           0, &running_handles);
 
-            if (running_handles == _priv->running_handles) return false;
+            if (running_handles == _priv->running_handles) return true;
 
             // cleanup finished handles/chunks
             int msgs;
@@ -249,7 +266,7 @@ namespace Yatta
 
             _priv->running_handles = running_handles;
 
-            return false;
+            return true;
         }
     };
 };

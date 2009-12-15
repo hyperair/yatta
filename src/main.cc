@@ -38,7 +38,9 @@ main (int argc, char **argv)
     textdomain (GETTEXT_PACKAGE);
 
     // initialize curl backend
-    Yatta::Curl::Manager backendmgr;
+    Glib::RefPtr<Yatta::Curl::Manager> backendmgr =
+        Yatta::Curl::Manager::create ();
+    backendmgr->attach ();
 
     try {
         // get options

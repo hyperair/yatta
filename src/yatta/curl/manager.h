@@ -22,6 +22,7 @@
 #include <map>
 
 #include <glibmm/main.h>
+#include <glibmm/refptr.h>
 
 #include "chunk.h"
 
@@ -32,13 +33,15 @@ namespace Yatta
         class Manager : public Glib::Source
         {
             public:
-                Manager ();
+                static Glib::RefPtr<Manager> create ();
                 void add_handle (Chunk::Ptr chunk);
                 void remove_handle (Chunk::Ptr chunk);
                 void perform ();
                 virtual ~Manager ();
 
             protected:
+                Manager ();
+
                 // internal remove_handle functions
                 void remove_handle (CURL *chunk);
                 void remove_handle (std::map <CURL*,Chunk::Ptr>::iterator iter);
