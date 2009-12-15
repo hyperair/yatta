@@ -198,8 +198,10 @@ namespace Yatta
         bool
         Manager::dispatch (sigc::slot_base *slot)
         {
+            // copy the current running handles over
             int running_handles = _priv->running_handles;
 
+            // check all the polls
             for (pollmap_t::iterator i = _priv->pollmap.begin ();
                  i != _priv->pollmap.end ();
                  ++i)
@@ -218,31 +220,36 @@ namespace Yatta
                                           evmask, &running_handles);
             }
 
-            // tell curl it's time
+            // check if we've timed out and alert libcurl
             long timeout;
-            if (curl_multi_timeout (_priv->multihandle, &timeout), timeout == 0)
+            curl_multi_timeout (_priv->multihandle, &timeout);
+            if (timeout == 0)
                 curl_multi_socket_action (_priv->multihandle,
                                           CURL_SOCKET_TIMEOUT,
                                           0, &running_handles);
 
-            if (running_handles != _priv->running_handles) {
-                // an easy handle (chunk) has finished!
-                int msgs;
-                CURLMsg *msg = 0;
-                while (msg = curl_multi_info_read (_priv->multihandle, &msgs))
-                {
-                    CURL *handle = msg->easy_handle;
-                    CURLcode result = msg->data.result;
-                    chunkmap_t::iterator iter =
-                        _priv->chunkmap.find (handle);
-                    if (iter == _priv->chunkmap.end ())
-                        continue; // TODO: report error as a BUG
+            if (running_handles == _priv->running_handles) return false;
 
-                    // handle removal of chunk
-                    iter->second->signal_finished ().emit (result);
-                    remove_handle (iter);
-                }
+            // cleanup finished handles/chunks
+            int msgs;
+            CURLMsg *msg = 0;
+            while (msg = curl_multi_info_read (_priv->multihandle, &msgs))
+            {
+                CURL *handle = msg->easy_handle;
+                CURLcode result = msg->data.result;
+                chunkmap_t::iterator iter =
+                    _priv->chunkmap.find (handle);
+                if (iter == _priv->chunkmap.end ())
+                    continue; // TODO: report error as a BUG
+
+                // handle removal of chunk
+                iter->second->signal_finished ().emit (result);
+                remove_handle (iter);
             }
+
+            _priv->running_handles = running_handles;
+
+            return false;
         }
     };
 };
