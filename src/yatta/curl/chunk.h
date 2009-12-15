@@ -70,31 +70,28 @@ namespace Yatta
                 signal_finished_t signal_finished ();
 
                 // offset accessor (beginning of this chunk)
-                size_t get_offset () const;
-                void   set_offset (const size_t & arg);
+                size_t offset () const;
+                void   offset (const size_t & arg);
                 // how many bytes in this chunk downloaded
-                size_t get_downloaded () const;
+                size_t downloaded () const;
                 // current position accessor (offset + downloaded)
                 size_t tell () const;
 
-                CURL * get_handle ();
+                CURL * handle ();
 
             protected:
                 // header function
-                static size_t
-                header_cb (void *data, size_t size, size_t nmemb, void *obj);
+                static size_t header_cb (void *data, size_t size,
+                                         size_t nmemb, void *obj);
 
                 // progress function
-                static size_t
-                progress_cb (void *obj,
-                        double dltotal,
-                        double dlnow,
-                        double ultotal,
-                        double ulnow);
+                static size_t progress_cb (void *obj,
+                                           double dltotal, double dlnow,
+                                           double ultotal, double ulnow);
 
                 // write function
-                static size_t
-                write_cb (void *data, size_t size, size_t nmemb, void *obj);
+                static size_t write_cb (void *data, size_t size,
+                                        size_t nmemb, void *obj);
 
             private:
                 struct Private;

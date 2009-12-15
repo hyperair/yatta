@@ -40,7 +40,7 @@ namespace Yatta
                          const std::string &filename = "");
                 void write (size_t offset, void *data, size_t size);
                 void perform ();
-                void set_filename (const std::string &filename);
+                void filename (const std::string &filename);
                 virtual ~IOQueue ();
 
             protected:

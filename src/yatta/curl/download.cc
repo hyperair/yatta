@@ -91,7 +91,7 @@ namespace Yatta
                      i = j++)
                 {
                     size_t current_gap_size = \
-                        (*j)->tell () - (*i)->get_offset ();
+                        (*j)->tell () - (*i)->offset ();
 
                     // if current isn't bigger than previous biggest, move on
                     if (current_gap_size <= biggest_gap_size)
@@ -103,10 +103,10 @@ namespace Yatta
                 }
 
                 // check the size between the last chunk and EOF
-                if (get_size ()-1 >= biggest_gap_size)
+                if (size ()-1 >= biggest_gap_size)
                 {
                     iter_chunk_before = --_priv->chunks.end ();
-                    biggest_gap_size = get_size () - 1;
+                    biggest_gap_size = size () - 1;
                 }
 
                 // new offset is centrepoint of the largest undownloaded gap
@@ -157,13 +157,13 @@ namespace Yatta
 
         // accessor methods
         Glib::ustring
-        Download::get_url () const
+        Download::url () const
         {
             return _priv->url;
         }
 
         void
-        Download::set_url (const Glib::ustring &url)
+        Download::url (const Glib::ustring &url)
         {
             _priv->url = url;
         }
@@ -175,7 +175,7 @@ namespace Yatta
         }
 
         size_t
-        Download::get_size () const
+        Download::size () const
         {
             return _priv->size;
         }
@@ -198,7 +198,7 @@ namespace Yatta
             // TODO: check ftp properly as well
             long status;
 
-            if (curl_easy_getinfo (chunk->get_handle (),
+            if (curl_easy_getinfo (chunk->handle (),
                                    CURLINFO_RESPONSE_CODE,
                                    &status)
                 != CURLE_OK)

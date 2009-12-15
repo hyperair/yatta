@@ -1,16 +1,16 @@
 /*      chunk.cc -- part of the Yatta! Download Manager
  *      Copyright (C) 2009, Chow Loong Jin <hyperair@gmail.com>
- *  
+ *
  *      This program is free software: you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
  *      the Free Software Foundation, either version 3 of the License, or
  *      (at your option) any later version.
- *  
+ *
  *      This program is distributed in the hope that it will be useful,
  *      but WITHOUT ANY WARRANTY; without even the implied warranty of
  *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *      GNU General Public License for more details.
- *  
+ *
  *      You should have received a copy of the GNU General Public License
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -59,20 +59,20 @@ namespace Yatta
             _priv (new Private (parent, offset))
         {
             // set some curl options...
-            curl_easy_setopt (get_handle (), CURLOPT_URL,
-                              parent.get_url ().c_str ());
-            curl_easy_setopt (get_handle (), CURLOPT_RESUME_FROM, offset);
+            curl_easy_setopt (handle (), CURLOPT_URL,
+                              parent.url ().c_str ());
+            curl_easy_setopt (handle (), CURLOPT_RESUME_FROM, offset);
 
             // make curl pass this into the callbacks
-            curl_easy_setopt (get_handle (), CURLOPT_WRITEDATA, this);
-            curl_easy_setopt (get_handle (), CURLOPT_PROGRESSDATA, this);
-            curl_easy_setopt (get_handle (), CURLOPT_HEADERDATA, this);
+            curl_easy_setopt (handle (), CURLOPT_WRITEDATA, this);
+            curl_easy_setopt (handle (), CURLOPT_PROGRESSDATA, this);
+            curl_easy_setopt (handle (), CURLOPT_HEADERDATA, this);
 
             // bind the callbacks
-            curl_easy_setopt (get_handle (), CURLOPT_WRITEFUNCTION, &write_cb);
-            curl_easy_setopt (get_handle (), CURLOPT_PROGRESSFUNCTION,
+            curl_easy_setopt (handle (), CURLOPT_WRITEFUNCTION, &write_cb);
+            curl_easy_setopt (handle (), CURLOPT_PROGRESSFUNCTION,
                               &progress_cb);
-            curl_easy_setopt (get_handle (), CURLOPT_HEADERFUNCTION,
+            curl_easy_setopt (handle (), CURLOPT_HEADERFUNCTION,
                               &header_cb);
         }
 
@@ -126,18 +126,18 @@ namespace Yatta
 
         // I/O status accessors
         size_t
-        Chunk::get_offset() const
+        Chunk::offset() const
         {
             return _priv->offset;
         }
         void
-        Chunk::set_offset (const size_t &arg)
+        Chunk::offset (const size_t &arg)
         {
             _priv->offset = arg;
         }
 
         size_t
-        Chunk::get_downloaded () const
+        Chunk::downloaded () const
         {
             return _priv->downloaded;
         }
@@ -145,12 +145,12 @@ namespace Yatta
         size_t
         Chunk::tell () const
         {
-            return _priv->offset + _priv->downloaded;
+            return offset () + downloaded ();
         }
 
         // other accessors
         CURL *
-        Chunk::get_handle ()
+        Chunk::handle ()
         {
             return _priv->handle;
         }

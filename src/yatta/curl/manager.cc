@@ -71,7 +71,7 @@ namespace Yatta
         void
         Manager::add_handle (Chunk::Ptr chunk)
         {
-            CURL *handle = chunk->get_handle ();
+            CURL *handle = chunk->handle ();
 
             curl_easy_setopt (handle,
                               CURLOPT_SHARE,
@@ -87,7 +87,7 @@ namespace Yatta
         void
         Manager::remove_handle (Chunk::Ptr chunk)
         {
-            CURL *handle = chunk->get_handle ();
+            CURL *handle = chunk->handle ();
             remove_handle (handle);
         }
 
