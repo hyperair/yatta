@@ -1,16 +1,16 @@
 /*      mainwindow.cc -- part of the Yatta! Download Manager
  *      Copyright (C) 2009, Chow Loong Jin <hyperair@gmail.com>
- *  
+ *
  *      This program is free software: you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
  *      the Free Software Foundation, either version 3 of the License, or
  *      (at your option) any later version.
- *  
+ *
  *      This program is distributed in the hope that it will be useful,
  *      but WITHOUT ANY WARRANTY; without even the implied warranty of
  *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *      GNU General Public License for more details.
- *  
+ *
  *      You should have received a copy of the GNU General Public License
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -30,21 +30,29 @@ namespace Yatta
 {
     namespace UI
     {
+        struct MainWindow::Priv
+        {
+            Priv (Main &ui_main) :
+                uimgr (Gtk::UIManager::create ()),
+                ui_main (ui_main) {}
+            Glib::RefPtr<Gtk::UIManager> uimgr;
+            Main &ui_main; // main UI object
+        };
+
         MainWindow::MainWindow (Main &ui_main) :
             Gtk::Window (),
-            m_ref_uimgr (Gtk::UIManager::create ()),
-            m_ui_main (ui_main)
+            _priv (new Priv (ui_main))
         {
             // set defaults for the window
             set_title (_("Yatta! Download Manager"));
             set_default_size (640, 480);
 
             // prepare uimgr
-            m_ref_uimgr->add_ui_from_file 
-                (m_ui_main.get_options ().get_datadir () +
+            _priv->uimgr->add_ui_from_file 
+                (_priv->ui_main.options ().datadir () +
                  "/main_menu.ui");
-            m_ref_uimgr->add_ui_from_file
-                (m_ui_main.get_options ().get_datadir () +
+            _priv->uimgr->add_ui_from_file
+                (_priv->ui_main.options ().datadir () +
                  "/main_tb.ui");
             prepare_actions ();
 
@@ -52,8 +60,7 @@ namespace Yatta
             construct_widgets ();
         }
 
-        void
-        MainWindow::construct_widgets ()
+        void MainWindow::construct_widgets ()
         {
             // add a vbox to the window first
             Gtk::VBox *main_vbox = manage (new Gtk::VBox);
@@ -61,8 +68,8 @@ namespace Yatta
 
             // get menu and toolbar
             Gtk::Widget *menu, *toolbar;
-            menu = m_ref_uimgr->get_widget ("/mm_bar");
-            toolbar = m_ref_uimgr->get_widget ("/mt_bar");
+            menu = _priv->uimgr->get_widget ("/mm_bar");
+            toolbar = _priv->uimgr->get_widget ("/mt_bar");
 
             if ( !menu || !toolbar ) {
                 // TODO: log error
@@ -77,11 +84,10 @@ namespace Yatta
             main_vbox->show_all ();
 
             // bind them shortcuts!
-            add_accel_group (m_ref_uimgr->get_accel_group ());
+            add_accel_group (_priv->uimgr->get_accel_group ());
         }
 
-        void
-        MainWindow::prepare_actions ()
+        void MainWindow::prepare_actions ()
         {
             Glib::RefPtr<Gtk::ActionGroup> actions =
                 Gtk::ActionGroup::create ();
@@ -156,14 +162,13 @@ namespace Yatta
             // in help menu
             actions->add (Gtk::Action::create ("ShowAbtDlg", 
                                                Gtk::Stock::ABOUT),
-                          sigc::mem_fun (m_ui_main, &Main::show_aboutdlg));
+                          sigc::mem_fun (_priv->ui_main, &Main::show_aboutdlg));
 
             // add the actions into the ui mgr
-            m_ref_uimgr->insert_action_group (actions);
+            _priv->uimgr->insert_action_group (actions);
         }
 
-        void
-        MainWindow::on_hide ()
+        void MainWindow::on_hide ()
         {
             Gtk::Main::quit ();
         }

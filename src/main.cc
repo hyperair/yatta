@@ -29,8 +29,7 @@
 #include "yatta/ui/main.h"
 #include "yatta/curl/manager.h"
 
-int
-main (int argc, char **argv)
+int main (int argc, char **argv)
 {
     // initialize gettext
     bindtextdomain (GETTEXT_PACKAGE, PROGRAMNAME_LOCALEDIR);

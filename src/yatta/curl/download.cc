@@ -156,41 +156,35 @@ namespace Yatta
         }
 
         // accessor methods
-        Glib::ustring
-        Download::url () const
+        Glib::ustring Download::url () const
         {
             return _priv->url;
         }
 
-        void
-        Download::url (const Glib::ustring &url)
+        void Download::url (const Glib::ustring &url)
         {
             _priv->url = url;
         }
 
-        bool
-        Download::resumable () const
+        bool Download::resumable () const
         {
             return _priv->resumable;
         }
 
-        size_t
-        Download::size () const
+        size_t Download::size () const
         {
             return _priv->size;
         }
 
         // slots for interfacing with chunks
-        void
-        Download::signal_header_cb (Chunk::Ptr chunk,
+        void Download::signal_header_cb (Chunk::Ptr chunk,
                                     void *data,
                                     size_t size,
                                     size_t nmemb)
         {
         }
 
-        void
-        Download::chunk_check_resumable (Chunk::Ptr chunk)
+        void Download::chunk_check_resumable (Chunk::Ptr chunk)
         {
             // we only want to be called once, so disconnect the slot
             _priv->check_resumable_connection.disconnect ();
@@ -207,15 +201,13 @@ namespace Yatta
             _priv->resumable = (status == 206);
         }
 
-        void
-        Download::signal_progress_cb (Chunk::Ptr chunk,
+        void Download::signal_progress_cb (Chunk::Ptr chunk,
                                       double dltotal,
                                       double dlnow)
         {
         }
 
-        void
-        Download::signal_write_cb (Chunk::Ptr chunk,
+        void Download::signal_write_cb (Chunk::Ptr chunk,
                                    void *data,
                                    size_t size,
                                    size_t nmemb)

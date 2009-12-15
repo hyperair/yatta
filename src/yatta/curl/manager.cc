@@ -80,8 +80,7 @@ namespace Yatta
             curl_global_cleanup ();
         }
 
-        void
-        Manager::add_handle (Chunk::Ptr chunk)
+        void Manager::add_handle (Chunk::Ptr chunk)
         {
             CURL *handle = chunk->handle ();
 
@@ -96,15 +95,13 @@ namespace Yatta
             chunk->signal_started ().emit ();
         }
 
-        void
-        Manager::remove_handle (Chunk::Ptr chunk)
+        void Manager::remove_handle (Chunk::Ptr chunk)
         {
             CURL *handle = chunk->handle ();
             remove_handle (handle);
         }
 
-        void
-        Manager::remove_handle (CURL *handle)
+        void Manager::remove_handle (CURL *handle)
         {
             chunkmap_t::iterator result =
                 _priv->chunkmap.find (handle);
@@ -112,8 +109,7 @@ namespace Yatta
             remove_handle (result);
         }
 
-        void
-        Manager::remove_handle (chunkmap_t::iterator iter)
+        void Manager::remove_handle (chunkmap_t::iterator iter)
         {
             Chunk::Ptr chunk = iter->second;
             _priv->chunkmap.erase (iter);
@@ -121,8 +117,7 @@ namespace Yatta
             chunk->signal_stopped ().emit ();
         }
 
-        void
-        Manager::perform ()
+        void Manager::perform ()
         {
             int prev_running_handles = _priv->running_handles;
             while (curl_multi_perform (_priv->multihandle,
@@ -134,8 +129,7 @@ namespace Yatta
             }
         }
 
-        int
-        Manager::socket_cb (CURL *easy,
+        int Manager::socket_cb (CURL *easy,
                    curl_socket_t s,
                    int action,
                    void *userp,
@@ -182,8 +176,7 @@ namespace Yatta
             return 0;
         }
 
-        bool
-        Manager::prepare (int &timeout)
+        bool Manager::prepare (int &timeout)
         {
             long timeout2;
             timeout = curl_multi_timeout (_priv->multihandle, &timeout2);
@@ -192,8 +185,7 @@ namespace Yatta
             return (timeout == 0);
         }
 
-        bool
-        Manager::check ()
+        bool Manager::check ()
         {
             // we're ready if we've timed out..
             long timeout;
@@ -212,8 +204,7 @@ namespace Yatta
             return false;
         }
 
-        bool
-        Manager::dispatch (sigc::slot_base *slot)
+        bool Manager::dispatch (sigc::slot_base *slot)
         {
             // copy the current running handles over
             int running_handles = _priv->running_handles;
@@ -232,6 +223,8 @@ namespace Yatta
                     evmask |= CURL_CSELECT_OUT;
                 if (flags & (Glib::IO_ERR | Glib::IO_HUP))
                     evmask |= CURL_CSELECT_ERR;
+
+                if (evmask != 0) continue;
 
                 curl_multi_socket_action (_priv->multihandle, i->first,
                                           evmask, &running_handles);

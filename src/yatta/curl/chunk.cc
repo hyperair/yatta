@@ -88,83 +88,71 @@ namespace Yatta
         }
 
         // signal accessors
-        Chunk::signal_header_t
-        Chunk::signal_header ()
+        Chunk::signal_header_t Chunk::signal_header ()
         {
             return _priv->signal_header;
         }
 
-        Chunk::signal_progress_t
-        Chunk::signal_progress ()
+        Chunk::signal_progress_t Chunk::signal_progress ()
         {
             return _priv->signal_progress;
         }
 
-        Chunk::signal_write_t
-        Chunk::signal_write ()
+        Chunk::signal_write_t Chunk::signal_write ()
         {
             return _priv->signal_write;
         }
 
-        Chunk::signal_started_t
-        Chunk::signal_started ()
+        Chunk::signal_started_t Chunk::signal_started ()
         {
             return _priv->signal_started;
         }
 
-        Chunk::signal_stopped_t
-        Chunk::signal_stopped ()
+        Chunk::signal_stopped_t Chunk::signal_stopped ()
         {
             return _priv->signal_stopped;
         }
 
-        Chunk::signal_finished_t
-        Chunk::signal_finished ()
+        Chunk::signal_finished_t Chunk::signal_finished ()
         {
             return _priv->signal_finished;
         }
 
         // I/O status accessors
-        size_t
-        Chunk::offset() const
+        size_t Chunk::offset() const
         {
             return _priv->offset;
         }
-        void
-        Chunk::offset (const size_t &arg)
+
+        void Chunk::offset (const size_t &arg)
         {
             _priv->offset = arg;
         }
 
-        size_t
-        Chunk::downloaded () const
+        size_t Chunk::downloaded () const
         {
             return _priv->downloaded;
         }
 
-        size_t
-        Chunk::tell () const
+        size_t Chunk::tell () const
         {
             return offset () + downloaded ();
         }
 
         // other accessors
-        CURL *
-        Chunk::handle ()
+        CURL *Chunk::handle ()
         {
             return _priv->handle;
         }
 
         // static CURL callbacks
-        size_t
-        Chunk::header_cb (void *data, size_t size, size_t nmemb, void *obj)
+        size_t Chunk::header_cb (void *data, size_t size, size_t nmemb, void *obj)
         {
             reinterpret_cast<Chunk*> (obj)->signal_header ()
                 .emit (data, size, nmemb);
         }
 
-        size_t
-        Chunk::progress_cb (void *obj,
+        size_t Chunk::progress_cb (void *obj,
                 double dltotal, double dlnow,
                 double ultotal, double ulnow)
         {
@@ -177,8 +165,7 @@ namespace Yatta
                 .emit (dltotal, dlnow, ultotal, ulnow);
         }
 
-        size_t
-        Chunk::write_cb (void *data, size_t size, size_t nmemb, void *obj)
+        size_t Chunk::write_cb (void *data, size_t size, size_t nmemb, void *obj)
         {
             reinterpret_cast<Chunk*> (obj)->signal_write ()
                 .emit (data, size, nmemb);

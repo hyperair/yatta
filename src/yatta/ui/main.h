@@ -1,16 +1,16 @@
 /*      main.h -- part of the Yatta! Download Manager
  *      Copyright (C) 2009, Chow Loong Jin <hyperair@gmail.com>
- *  
+ *
  *      This program is free software: you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
  *      the Free Software Foundation, either version 3 of the License, or
  *      (at your option) any later version.
- *  
+ *
  *      This program is distributed in the hope that it will be useful,
  *      but WITHOUT ANY WARRANTY; without even the implied warranty of
  *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *      GNU General Public License for more details.
- *  
+ *
  *      You should have received a copy of the GNU General Public License
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -18,16 +18,18 @@
 #ifndef YATTA_UI_MAIN_H
 #define YATTA_UI_MAIN_H
 
-#include <gtkmm/main.h>
+#include <tr1/memory>
 
-// forward declaration(s)
-namespace Yatta { class Options; };
+#include <gtkmm/main.h>
 
 #include "mainwindow.h"
 #include "aboutdialog.h"
 
 namespace Yatta
 {
+    // forward decl
+    class Options;
+
     namespace UI
     {
         /**
@@ -58,7 +60,7 @@ namespace Yatta
                  * @description: Get Yatta::Options object
                  * @return: reference to the Options object
                  */
-                Options &get_options ();
+                Options &options ();
 
                 /**
                  * @brief: Desctructor
@@ -69,9 +71,9 @@ namespace Yatta
                 // Options must come before MainWindow, otherwise segfault
                 // reason is MainWindow's construction requires m_options
                 // to be defined.
-                Options &m_options; // program options
-                MainWindow m_mainwin; // main window
-                About m_aboutdlg; // about dialog
+                struct Priv;
+                Options &_options;
+                std::tr1::shared_ptr<Priv> _priv;
         };
     };
 };
