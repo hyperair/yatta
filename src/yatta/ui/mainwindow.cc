@@ -15,12 +15,9 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <glibmm.h>
 #include <glibmm/i18n.h>
-
-#include <gtkmm/main.h>
-#include <gtkmm/box.h>
-#include <gtkmm/uimanager.h>
-#include <gtkmm/stock.h>
+#include <gtkmm.h>
 
 #include "mainwindow.h"
 #include "main.h"
@@ -47,17 +44,12 @@ namespace Yatta
             set_title (_("Yatta! Download Manager"));
             set_default_size (640, 480);
 
-            // prepare uimgr
-            _priv->uimgr->add_ui_from_file 
-                (_priv->ui_main.options ().datadir () +
-                 "/main_menu.ui");
-            _priv->uimgr->add_ui_from_file
-                (_priv->ui_main.options ().datadir () +
-                 "/main_tb.ui");
-            prepare_actions ();
-
-            // prepare widgets
-            construct_widgets ();
+            // prepare widgets and show when idle
+            Glib::signal_idle ().connect (
+                sigc::bind_return (
+                    sigc::mem_fun (*this,
+                                   &MainWindow::construct_widgets),
+                    false));
         }
 
         void MainWindow::construct_widgets ()
@@ -68,10 +60,11 @@ namespace Yatta
 
             // get menu and toolbar
             Gtk::Widget *menu, *toolbar;
+            prepare_uimgr ();
             menu = _priv->uimgr->get_widget ("/mm_bar");
             toolbar = _priv->uimgr->get_widget ("/mt_bar");
 
-            if ( !menu || !toolbar ) {
+            if (!menu || !toolbar) {
                 // TODO: log error
                 exit (1);
             }
@@ -87,8 +80,16 @@ namespace Yatta
             add_accel_group (_priv->uimgr->get_accel_group ());
         }
 
-        void MainWindow::prepare_actions ()
+        void MainWindow::prepare_uimgr ()
         {
+            // load .ui files
+            _priv->uimgr->add_ui_from_file
+                (_priv->ui_main.options ().datadir () +
+                 "/main_menu.ui");
+            _priv->uimgr->add_ui_from_file
+                (_priv->ui_main.options ().datadir () +
+                 "/main_tb.ui");
+
             Glib::RefPtr<Gtk::ActionGroup> actions =
                 Gtk::ActionGroup::create ();
 
@@ -105,27 +106,27 @@ namespace Yatta
                      Gtk::Stock::NEW,
                      _("Add URI"),
                      _("Add downloads manually")));
-            actions->add (Gtk::Action::create 
+            actions->add (Gtk::Action::create
                     ("Quit",
                      Gtk::Stock::QUIT),
                      sigc::mem_fun (*this, &MainWindow::hide));
 
             // in edit menu
-            actions->add (Gtk::Action::create 
+            actions->add (Gtk::Action::create
                     ("ShowPrefsDlg",
                      Gtk::Stock::PREFERENCES));
 
             // in download menu
-            actions->add (Gtk::Action::create 
+            actions->add (Gtk::Action::create
                     ("OpenFolder",
                      Gtk::Stock::OPEN));
-            actions->add (Gtk::Action::create 
+            actions->add (Gtk::Action::create
                     ("ResumeDownload",
                      Gtk::Stock::MEDIA_PLAY));
-            actions->add (Gtk::Action::create 
+            actions->add (Gtk::Action::create
                     ("PauseDownload",
                      Gtk::Stock::MEDIA_PAUSE));
-            actions->add (Gtk::Action::create 
+            actions->add (Gtk::Action::create
                     ("CancelDownload",
                      Gtk::Stock::STOP));
             actions->add (Gtk::Action::create
@@ -160,7 +161,7 @@ namespace Yatta
                      _("Move this download to the bottom of the queue")));
 
             // in help menu
-            actions->add (Gtk::Action::create ("ShowAbtDlg", 
+            actions->add (Gtk::Action::create ("ShowAbtDlg",
                                                Gtk::Stock::ABOUT),
                           sigc::mem_fun (_priv->ui_main, &Main::show_aboutdlg));
 

@@ -44,7 +44,7 @@ namespace Yatta
                  * @description: Prepares Actions for the menu and toolbar
                  *               and adds them into m_ref_uimgr
                  */
-                virtual void prepare_actions ();
+                virtual void prepare_uimgr ();
 
                 /**
                  * @see Gtk::Widget::hide()

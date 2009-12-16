@@ -68,11 +68,7 @@ namespace Yatta
                 virtual ~Main ();
 
             private:
-                // Options must come before MainWindow, otherwise segfault
-                // reason is MainWindow's construction requires m_options
-                // to be defined.
                 struct Priv;
-                Options &_options;
                 std::tr1::shared_ptr<Priv> _priv;
         };
     };

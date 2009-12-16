@@ -146,7 +146,8 @@ namespace Yatta
         }
 
         // static CURL callbacks
-        size_t Chunk::header_cb (void *data, size_t size, size_t nmemb, void *obj)
+        size_t Chunk::header_cb (void *data, size_t size,
+                                 size_t nmemb, void *obj)
         {
             reinterpret_cast<Chunk*> (obj)->signal_header ()
                 .emit (data, size, nmemb);
@@ -165,7 +166,8 @@ namespace Yatta
                 .emit (dltotal, dlnow, ultotal, ulnow);
         }
 
-        size_t Chunk::write_cb (void *data, size_t size, size_t nmemb, void *obj)
+        size_t Chunk::write_cb (void *data, size_t size,
+                                size_t nmemb, void *obj)
         {
             reinterpret_cast<Chunk*> (obj)->signal_write ()
                 .emit (data, size, nmemb);

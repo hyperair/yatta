@@ -28,18 +28,19 @@ namespace Yatta
     {
         struct Main::Priv
         {
-            Priv (Main &self) :
+            Priv (Main &self, Options &options) :
                 mainwin (self),
-                aboutdlg () {}
+                aboutdlg (),
+                options (options) {}
             MainWindow mainwin; // main window
             About      aboutdlg; // about dialog
+            Options   &options;
 
         };
 
         Main::Main (int &argc, char **&argv, Options &options) :
             Gtk::Main (argc, argv, options),
-            _options (options),
-            _priv (new Priv (*this))
+            _priv (new Priv (*this, options))
         {
         }
 
@@ -56,7 +57,7 @@ namespace Yatta
 
         Options &Main::options ()
         {
-            return _options;
+            return _priv->options;
         }
 
         Main::~Main ()
