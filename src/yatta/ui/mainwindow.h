@@ -54,6 +54,10 @@ namespace Yatta
             private:
                 struct Priv;
                 std::tr1::shared_ptr<Priv> _priv;
+
+                // content automatically generated from *.ui
+                static const char *main_menu_uidata;
+                static const char *main_tb_uidata;
         };
     };
 };

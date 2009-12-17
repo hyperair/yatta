@@ -30,11 +30,6 @@ namespace Yatta
         public:
             Options ();
 
-            /**
-             * @description: Get the datadir, containing data files
-             * @return: Glib::ustring containing data dir
-             */
-            const Glib::ustring &datadir ();
             virtual ~Options ();
         private:
             struct Priv;

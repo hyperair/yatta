@@ -1,4 +1,4 @@
-<!--
+<![CDATA[
       main_menu.ui: part of the Yatta! Download Manager
 
       Copyright (C) 2009, Chow Loong Jin <hyperair@gmail.com>
@@ -15,7 +15,7 @@
   
       You should have received a copy of the GNU General Public License
       along with this program.  If not, see <http://www.gnu.org/licenses/>.
--->
+]]>
 
 <ui>
     <menubar name="mm_bar">

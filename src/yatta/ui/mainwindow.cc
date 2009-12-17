@@ -82,13 +82,9 @@ namespace Yatta
 
         void MainWindow::prepare_uimgr ()
         {
-            // load .ui files
-            _priv->uimgr->add_ui_from_file
-                (_priv->ui_main.options ().datadir () +
-                 "/main_menu.ui");
-            _priv->uimgr->add_ui_from_file
-                (_priv->ui_main.options ().datadir () +
-                 "/main_tb.ui");
+            // load .ui data
+            _priv->uimgr->add_ui_from_string (main_menu_uidata);
+            _priv->uimgr->add_ui_from_string (main_tb_uidata);
 
             Glib::RefPtr<Gtk::ActionGroup> actions =
                 Gtk::ActionGroup::create ();

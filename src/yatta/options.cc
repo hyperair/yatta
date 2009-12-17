@@ -28,9 +28,7 @@ namespace Yatta
     struct Options::Priv
     {
         Priv () :
-            datadir (DATADIR),
             maingroup ("main", "Main options") {}
-        Glib::ustring     datadir;
         Glib::OptionGroup maingroup;
     };
 
@@ -38,22 +36,7 @@ namespace Yatta
         Glib::OptionContext (),
         _priv (new Priv ())
     {
-        {
-            // prepare datadir OptionEntry
-            Glib::OptionEntry datadir_entry;
-            datadir_entry.set_long_name ("datadir");
-            datadir_entry.set_description
-                (Glib::ustring (_("Override data directory") )
-                 + " [" DATADIR "]");
-            _priv->maingroup.add_entry (datadir_entry, _priv->datadir);
-        }
-
         set_main_group (_priv->maingroup);
-    }
-
-    const Glib::ustring &Options::datadir ()
-    {
-        return _priv->datadir;
     }
 
     Options::~Options ()

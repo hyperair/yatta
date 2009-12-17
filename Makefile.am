@@ -1,15 +1,16 @@
 bin_PROGRAMS =
 EXTRA_DIST =
 SUBDIRS = po
+CLEANFILES =
 
 run: yatta
-	./yatta --datadir="$(top_srcdir)/data"
+	./yatta
 
 gdb: yatta
-	gdb --args ./yatta --datadir="$(top_srcdir)/data"
+	gdb --args ./yatta
 
 valgrind: yatta
-	valgrind ./yatta --datadir="$(top_srcdir)/data"
+	valgrind ./yatta
 
 cscope: cscope.out
 cscope.out: $(yatta_SOURCES)
@@ -25,6 +26,5 @@ AUTHORS:
 	git log --format="%an <%ae>" | sort -u > AUTHORS
 
 include src/Makefile.am
-include data/Makefile.am
 
-.PHONY: gen-ChangeLog run gdb valgrind cscope
+.PHONY: run gdb valgrind cscope
