@@ -45,11 +45,7 @@ namespace Yatta
             set_default_size (640, 480);
 
             // prepare widgets and show when idle
-            Glib::signal_idle ().connect (
-                sigc::bind_return (
-                    sigc::mem_fun (*this,
-                                   &MainWindow::construct_widgets),
-                    false));
+            construct_widgets ();
         }
 
         void MainWindow::construct_widgets ()
