@@ -29,5 +29,4 @@ cscope.*
 \#*#
 BROWSE
 semantic.cache
-mainwindow-main_*.cc
 yatta-*.tar.*
