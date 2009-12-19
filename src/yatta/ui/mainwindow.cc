@@ -31,8 +31,10 @@ namespace Yatta
         {
             Priv (Main &ui_main) :
                 uimgr (Gtk::UIManager::create ()),
+                statusbar (),
                 ui_main (ui_main) {}
             Glib::RefPtr<Gtk::UIManager> uimgr;
+            Gtk::Statusbar statusbar;
             Main &ui_main; // main UI object
         };
 
@@ -65,9 +67,10 @@ namespace Yatta
                 exit (1);
             }
 
-            // add menu and toolbar into the main vbox
+            // add widgets into vbox
             main_vbox->pack_start (*menu, Gtk::PACK_SHRINK);
             main_vbox->pack_start (*toolbar, Gtk::PACK_SHRINK);
+            main_vbox->pack_end (_priv->statusbar, Gtk::PACK_SHRINK);
 
             // show the main vbox!
             main_vbox->show_all ();
