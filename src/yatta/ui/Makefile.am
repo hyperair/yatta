@@ -18,25 +18,11 @@ CLEANFILES += \
 
 # embed .ui files into executable
 src/yatta/ui/mainwindow/%.cc: src/yatta/ui/mainwindow/%.ui
-	( echo "#include \"../mainwindow.h\""; \
-	echo "namespace Yatta { namespace UI {"; \
-	echo "const char *MainWindow::$(shell echo $< | \
-		sed -re 's/^.*\///; s/\.ui$$//;')_uidata = "; \
-	cat $< | \
-	( comment=''; \
-	while read line; do \
-		if [ -z $$comment ]; then \
-			if echo "$$line" | grep -q '<!\[CDATA\['; then \
-				echo "$$line" | sed -e 's,<\!\[CDATA\[.*$$,,'; \
-				comment=true; \
-			else \
-				echo "$$line"; \
-			fi; \
-		else \
-			if echo "$$line" | grep -q '\]\]>'; then \
-				echo "$$line" | sed -e 's,^.*\]\]>,,'; \
-				comment=''; \
-			fi; \
-		fi; \
-	done ) | sed -e 's|"|\\"|g; s|^|"|; s|$$|"|; $$s|$$|\;|;'; \
-	echo "} }"; ) > $@
+	sed -e '/<\!\[CDATA\[/,/\]\]>/d' "$<" | \
+	sed -e 's/"/\\"/g; s/^/"/; s/$$/"/; $$s/$$/;/;' \
+		-e '1i\
+\#include "../mainwindow.h" \
+namespace Yatta { namespace UI { \
+const char *MainWindow::$(shell echo $< | \
+                          sed -re 's,^.*/,,; s,\.ui$$,_uidata,;') =' \
+		-e '$$a}\;}\;' > $@
