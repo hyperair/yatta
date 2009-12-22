@@ -33,6 +33,7 @@ namespace Yatta
         {
             public:
                 explicit MainWindow (Main &ui_main);
+                virtual ~MainWindow ();
 
             protected:
                 /**

@@ -18,6 +18,7 @@
 #include <glibmm.h>
 #include <glibmm/i18n.h>
 #include <gtkmm.h>
+#include <gtkmm/accelmap.h>
 
 #include "mainwindow.h"
 #include "main.h"
@@ -32,9 +33,11 @@ namespace Yatta
             Priv (Main &ui_main) :
                 uimgr (Gtk::UIManager::create ()),
                 statusbar (),
+                notebook (),
                 ui_main (ui_main) {}
             Glib::RefPtr<Gtk::UIManager> uimgr;
             Gtk::Statusbar statusbar;
+            Gtk::Notebook  notebook;
             Main &ui_main; // main UI object
         };
 
@@ -48,6 +51,17 @@ namespace Yatta
 
             // prepare widgets and show when idle
             construct_widgets ();
+
+            // TODO: use build_filename and don't repeat code
+            Gtk::AccelMap::load (Glib::get_user_config_dir () +
+                                 "/yatta/accels.map");
+        }
+
+        MainWindow::~MainWindow ()
+        {
+            // TODO: see note in constructor
+            Gtk::AccelMap::save (Glib::get_user_config_dir () +
+                                 "/yatta/accels.map");
         }
 
         void MainWindow::construct_widgets ()
@@ -67,10 +81,17 @@ namespace Yatta
                 exit (1);
             }
 
+            // prepare VPaned
+            Gtk::VPaned *vpaned = manage (new Gtk::VPaned);
+            Gtk::HPaned *hpaned = manage (new Gtk::HPaned);
+            vpaned->pack1 (*hpaned, Gtk::EXPAND | Gtk::FILL);
+            vpaned->pack2 (_priv->notebook, Gtk::EXPAND | Gtk::FILL);
+
             // add widgets into vbox
             main_vbox->pack_start (*menu, Gtk::PACK_SHRINK);
             main_vbox->pack_start (*toolbar, Gtk::PACK_SHRINK);
-            main_vbox->pack_end (_priv->statusbar, Gtk::PACK_SHRINK);
+            main_vbox->pack_start (*vpaned, Gtk::PACK_EXPAND_WIDGET);
+            main_vbox->pack_start (_priv->statusbar, Gtk::PACK_SHRINK);
 
             // show the main vbox!
             main_vbox->show_all ();
