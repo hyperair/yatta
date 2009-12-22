@@ -23,6 +23,5 @@ src/yatta/ui/mainwindow/%.cc: src/yatta/ui/mainwindow/%.ui
 		-e '1i\
 \#include "../mainwindow.h" \
 namespace Yatta { namespace UI { \
-const char *MainWindow::$(shell echo $< | \
-                          sed -re 's,^.*/,,; s,\.ui$$,_uidata,;') =' \
+const char *MainWindow::$(lastword $(subst /, , $(<:.ui=_uidata))) =' \
 		-e '$$a}\;}\;' > $@
