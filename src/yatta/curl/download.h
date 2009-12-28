@@ -21,6 +21,7 @@
 #include <tr1/memory>
 #include <list>
 #include <glibmm/ustring.h>
+#include <glibmm/refptr.h>
 
 #include "chunk.h"
 
@@ -34,7 +35,7 @@ namespace Yatta
         class Download : public sigc::trackable
         {
             public:
-            Download (Manager &mgr,
+            Download (Glib::RefPtr<Manager> mgr,
                       const Glib::ustring &url,
                       const std::string &dirname,
                       const std::string &filename = "");
