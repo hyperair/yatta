@@ -42,7 +42,11 @@ namespace Yatta
             int running_handles; // number of running handles
             chunkmap_t chunkmap; // map of CURL* to Chunk ptrs
             pollmap_t pollmap; // map of curl sockets to PollFD structs
+
+            static Glib::RefPtr<Manager> instance; // singleton instance
         };
+
+        Glib::RefPtr<Manager> Manager::Private::instance;
 
         Manager::Manager () :
             _priv (new Private()),
@@ -58,7 +62,7 @@ namespace Yatta
             curl_multi_setopt (_priv->multihandle, CURLMOPT_PIPELINING, 0);
             curl_multi_setopt (_priv->multihandle, CURLMOPT_SOCKETDATA, this);
             curl_multi_setopt (_priv->multihandle, CURLMOPT_SOCKETFUNCTION,
-                               &Manager::socket_cb);
+                               &Manager::on_curl_socket);
 
             set_can_recurse (true);
 
@@ -68,9 +72,12 @@ namespace Yatta
                     sigc::mem_fun (*this, &Manager::dispatch)));
         }
 
-        Glib::RefPtr<Manager> Manager::create ()
+        Glib::RefPtr<Manager> Manager::get ()
         {
-            return Glib::RefPtr<Manager> (new Manager ());
+            if (!Private::instance)
+                Private::instance = Glib::RefPtr<Manager> (new Manager);
+
+            return Private::instance;
         }
 
         Manager::~Manager ()
@@ -117,7 +124,7 @@ namespace Yatta
             chunk->signal_stopped ().emit ();
         }
 
-        int Manager::socket_cb (CURL *easy,
+        int Manager::on_curl_socket (CURL *easy,
                    curl_socket_t s,
                    int action,
                    void *userp,

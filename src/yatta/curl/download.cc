@@ -30,11 +30,9 @@ namespace Yatta
         // first the private class implementation
         struct Download::Private
         {
-            Private (Glib::RefPtr<Manager> mgr,
-                     const Glib::ustring &url,
+            Private (const Glib::ustring &url,
                      const std::string &dirname,
                      const std::string &filename = "") :
-                mgr (mgr),
                 url (url),
                 resumable (false),
                 size (0),
@@ -44,7 +42,6 @@ namespace Yatta
 
             typedef std::list<Chunk::Ptr> chunk_list_t;
 
-            Glib::RefPtr<Manager> &        mgr;
             Glib::ustring    url;
             chunk_list_t     chunks;
             bool             resumable;
@@ -54,12 +51,11 @@ namespace Yatta
         };
 
         // constructor
-        Download::Download (Glib::RefPtr<Manager> mgr,
-                            const Glib::ustring &url,
+        Download::Download (const Glib::ustring &url,
                             const std::string &dirname,
                             const std::string &filename) :
             sigc::trackable (),
-            _priv (new Private (mgr, url, dirname, filename))
+            _priv (new Private (url, dirname, filename))
         {
         }
 
@@ -147,7 +143,7 @@ namespace Yatta
 
             // insert the chunk into the list, and start the chunk downloading
             _priv->chunks.insert (iter_chunk_before, chunk);
-            _priv->mgr->add_handle (chunk);
+            Yatta::Curl::Manager::get ()->add_handle (chunk);
         }
 
         // decrease number of running chunks

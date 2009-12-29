@@ -33,7 +33,7 @@ namespace Yatta
         class Manager : public Glib::Source
         {
             public:
-                static Glib::RefPtr<Manager> create ();
+                static Glib::RefPtr<Manager> get ();
                 void add_handle (Chunk::Ptr chunk);
                 void remove_handle (Chunk::Ptr chunk);
                 virtual ~Manager ();
@@ -46,7 +46,7 @@ namespace Yatta
                 void remove_handle (std::map <CURL*,Chunk::Ptr>::iterator iter);
 
                 // internal socket callback function for passing into libcurl
-                static int socket_cb (CURL *easy, // easy handle
+                static int on_curl_socket (CURL *easy, // easy handle
                                       curl_socket_t s, // socket
                                       int action, // action mask
                                       void *userp, // private callback pointer

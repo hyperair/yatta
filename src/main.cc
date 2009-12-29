@@ -37,9 +37,7 @@ int main (int argc, char **argv)
     textdomain (GETTEXT_PACKAGE);
 
     // initialize curl backend
-    Glib::RefPtr<Yatta::Curl::Manager> backendmgr =
-        Yatta::Curl::Manager::create ();
-    backendmgr->attach ();
+    Yatta::Curl::Manager::get ()->attach ();
 
     try {
         // get options
@@ -50,6 +48,9 @@ int main (int argc, char **argv)
 
         // run main loop
         ui_kit.run ();
+
+        // cleanup after that
+        Yatta::Curl::Manager::get ()->destroy ();
     } catch (std::exception &e) {
         std::cerr << e.what () << std::endl;
     } catch (Glib::Exception &e) {

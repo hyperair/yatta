@@ -35,8 +35,7 @@ namespace Yatta
         class Download : public sigc::trackable
         {
             public:
-            Download (Glib::RefPtr<Manager> mgr,
-                      const Glib::ustring &url,
+            Download (const Glib::ustring &url,
                       const std::string &dirname,
                       const std::string &filename = "");
                 virtual ~Download ();
