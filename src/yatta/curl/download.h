@@ -43,6 +43,9 @@ namespace Yatta
                 void add_chunk (); // increases number of running chunks
                 void remove_chunk (); // decreases number of running chunks
 
+                void start ();
+                void stop ();
+
                 // accessors
                 unsigned short running_chunks () const;
                 unsigned short max_chunks () const;
@@ -52,21 +55,24 @@ namespace Yatta
                 void url (const Glib::ustring &url);
 
                 bool resumable() const;
+                bool running () const;
 
                 size_t size () const;
 
             protected:
-                virtual void signal_header_cb (Chunk::Ptr chunk,
-                                               void *data,
-                                               size_t size,
-                                               size_t nmemb);
-                virtual void signal_progress_cb (Chunk::Ptr chunk,
-                                                 double dltotal,
-                                                 double dlnow);
-                virtual void signal_write_cb (Chunk::Ptr chunk,
+                void normalize_chunks ();
+
+                virtual void on_chunk_header (Chunk::Ptr chunk,
                                               void *data,
                                               size_t size,
                                               size_t nmemb);
+                virtual void on_chunk_progress (Chunk::Ptr chunk,
+                                                double dltotal,
+                                                double dlnow);
+                virtual void on_chunk_write (Chunk::Ptr chunk,
+                                             void *data,
+                                             size_t size,
+                                             size_t nmemb);
                 virtual void chunk_check_resumable (Chunk::Ptr chunk);
             private:
                 struct Private;

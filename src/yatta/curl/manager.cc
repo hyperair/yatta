@@ -171,6 +171,7 @@ namespace Yatta
             return 0;
         }
 
+        // Glib::Source overrides
         bool Manager::prepare (int &timeout)
         {
             long timeout2;

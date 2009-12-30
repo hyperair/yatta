@@ -37,6 +37,7 @@ namespace Yatta
                 url (url),
                 resumable (false),
                 size (0),
+                running (false),
                 fileio (dirname, filename),
                 check_resumable_connection ()
             {}
@@ -46,6 +47,7 @@ namespace Yatta
             unsigned short   max_chunks;
             bool             resumable;
             size_t           size;
+            bool             running;
             IOQueue          fileio;
             sigc::connection check_resumable_connection;
         };
@@ -115,18 +117,18 @@ namespace Yatta
             // connect callbacks to signals, with chunk bound to them
             chunk->signal_header ()
                 .connect (sigc::bind<0>
-                          (sigc::mem_fun (*this, &Download::signal_header_cb),
+                          (sigc::mem_fun (*this, &Download::on_chunk_header),
                            chunk));
             chunk->signal_progress ()
                 .connect (sigc::bind<0>
                           (sigc::hide
                            (sigc::hide
                             (sigc::mem_fun (*this,
-                                            &Download::signal_progress_cb))),
+                                            &Download::on_chunk_progress))),
                            chunk));
             chunk->signal_write ()
                 .connect (sigc::bind<0>
-                          (sigc::mem_fun (*this, &Download::signal_write_cb),
+                          (sigc::mem_fun (*this, &Download::on_chunk_write),
                            chunk));
 
             // if this is the first chunk, check if it's resumable
@@ -149,6 +151,29 @@ namespace Yatta
         // decrease number of running chunks
         void Download::remove_chunk ()
         {
+        }
+
+        void Download::start ()
+        {
+            // already started, don't do anything
+            if (_priv->running) return;
+
+            // set status and wake up all the chunks
+            _priv->running = true;
+            normalize_chunks ();
+        }
+
+        void Download::stop ()
+        {
+            // already stopped don't do anything
+            if (!_priv->running) return;
+
+            // set status and stop all chunks
+            _priv->running = false;
+            for (chunk_list_t::iterator i = _priv->chunks.begin ();
+                 i != _priv->chunks.end ();
+                 i++)
+                (*i)->stop ();
         }
 
         // accessor methods
@@ -174,7 +199,7 @@ namespace Yatta
         void Download::max_chunks (unsigned short max_chunks)
         {
             _priv->max_chunks = max_chunks;
-            // TODO: normalize running chunks here
+            normalize_chunks ();
         }
 
         Glib::ustring Download::url () const
@@ -197,8 +222,12 @@ namespace Yatta
             return _priv->size;
         }
 
+        void Download::normalize_chunks ()
+        {
+        }
+
         // slots for interfacing with chunks
-        void Download::signal_header_cb (Chunk::Ptr chunk,
+        void Download::on_chunk_header (Chunk::Ptr chunk,
                                     void *data,
                                     size_t size,
                                     size_t nmemb)
@@ -222,13 +251,13 @@ namespace Yatta
             _priv->resumable = (status == 206);
         }
 
-        void Download::signal_progress_cb (Chunk::Ptr chunk,
+        void Download::on_chunk_progress (Chunk::Ptr chunk,
                                       double dltotal,
                                       double dlnow)
         {
         }
 
-        void Download::signal_write_cb (Chunk::Ptr chunk,
+        void Download::on_chunk_write (Chunk::Ptr chunk,
                                    void *data,
                                    size_t size,
                                    size_t nmemb)
