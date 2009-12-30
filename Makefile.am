@@ -25,6 +25,6 @@ ChangeLog:
 AUTHORS:
 	git log --format="%an <%ae>" | sort -u > AUTHORS
 
-include src/Makefile.am
+include src/rules.mk
 
 .PHONY: run gdb valgrind cscope

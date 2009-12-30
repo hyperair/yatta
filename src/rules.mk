@@ -11,4 +11,4 @@ yatta_CXXFLAGS = \
 yatta_LDADD = \
 	$(GTKMM_LIBS)
 
-include src/yatta/Makefile.am
+include src/yatta/rules.mk
