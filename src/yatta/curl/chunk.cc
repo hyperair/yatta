@@ -17,6 +17,7 @@
 
 #include "chunk.h"
 #include "download.h"
+#include "manager.h"
 
 namespace Yatta
 {
@@ -32,6 +33,7 @@ namespace Yatta
                 offset (offset),
                 downloaded (0),
                 total (0),
+                running (false),
                 signal_header (),
                 signal_progress (),
                 signal_write (),
@@ -39,11 +41,12 @@ namespace Yatta
             {}
 
             // data
-            CURL *handle;
+            CURL     *handle;
             Download &parent;
-            size_t offset;
-            size_t downloaded;
-            size_t total;
+            size_t    offset;
+            size_t    downloaded;
+            size_t    total;
+            bool      running;
 
             // signals
             signal_header_t   signal_header;
@@ -86,6 +89,21 @@ namespace Yatta
         // destructor
         Chunk::~Chunk ()
         {
+            // if we're still running, stop and disconnect from Manager
+            if (_priv->running) stop();
+        }
+
+        //member functions
+        void Chunk::start ()
+        {
+            Manager::get ()->add_handle (this);
+            _priv->running = true;
+        }
+
+        void Chunk::stop ()
+        {
+            Manager::get ()->remove_handle (this);
+            _priv->running = false;
         }
 
         // signal accessors
@@ -120,6 +138,11 @@ namespace Yatta
         }
 
         // I/O status accessors
+        bool Chunk::running () const
+        {
+            return _priv->running;
+        }
+
         size_t Chunk::offset() const
         {
             return _priv->offset;

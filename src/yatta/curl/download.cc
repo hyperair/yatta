@@ -27,7 +27,8 @@ namespace Yatta
 {
     namespace Curl
     {
-        // first the private class implementation
+        typedef std::list<Chunk::Ptr> chunk_list_t;
+
         struct Download::Private
         {
             Private (const Glib::ustring &url,
@@ -40,10 +41,9 @@ namespace Yatta
                 check_resumable_connection ()
             {}
 
-            typedef std::list<Chunk::Ptr> chunk_list_t;
-
             Glib::ustring    url;
             chunk_list_t     chunks;
+            unsigned short   max_chunks;
             bool             resumable;
             size_t           size;
             IOQueue          fileio;
@@ -69,7 +69,7 @@ namespace Yatta
         {
             // first we have to find the new chunk's offset.
             size_t new_offset;
-            Private::chunk_list_t::iterator iter_chunk_before;
+            chunk_list_t::iterator iter_chunk_before;
 
             // if no chunks already exist, we start from the beginning
             if (_priv->chunks.empty ())
@@ -81,7 +81,7 @@ namespace Yatta
 
                 // use two iterators at once, since we're looking at each
                 // undownloaded gap
-                for (Private::chunk_list_t::iterator j = _priv->chunks.begin (),
+                for (chunk_list_t::iterator j = _priv->chunks.begin (),
                          i = j++;
                      j != _priv->chunks.end ();
                      i = j++)
@@ -143,7 +143,7 @@ namespace Yatta
 
             // insert the chunk into the list, and start the chunk downloading
             _priv->chunks.insert (iter_chunk_before, chunk);
-            Yatta::Curl::Manager::get ()->add_handle (chunk);
+            chunk->start ();
         }
 
         // decrease number of running chunks
@@ -152,6 +152,31 @@ namespace Yatta
         }
 
         // accessor methods
+        unsigned short Download::running_chunks () const
+        {
+            unsigned short count = 0;
+
+            for (chunk_list_t::iterator i = _priv->chunks.begin ();
+                 i != _priv->chunks.end ();
+                 i++) {
+                if ((*i)->running ())
+                    count++;
+            }
+
+            return count;
+        }
+
+        unsigned short Download::max_chunks () const
+        {
+            return _priv->max_chunks;
+        }
+
+        void Download::max_chunks (unsigned short max_chunks)
+        {
+            _priv->max_chunks = max_chunks;
+            // TODO: normalize running chunks here
+        }
+
         Glib::ustring Download::url () const
         {
             return _priv->url;

@@ -43,8 +43,13 @@ namespace Yatta
                 void add_chunk (); // increases number of running chunks
                 void remove_chunk (); // decreases number of running chunks
 
+                // accessors
+                unsigned short running_chunks () const;
+                unsigned short max_chunks () const;
+                void max_chunks (unsigned short max_chunks);
+
                 Glib::ustring url () const;
-                void url (const Glib::ustring &uri);
+                void url (const Glib::ustring &url);
 
                 bool resumable() const;
 

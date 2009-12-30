@@ -25,7 +25,7 @@ namespace Yatta
 {
     namespace Curl
     {
-        typedef std::map<CURL*, Chunk::Ptr> chunkmap_t;
+        typedef std::map<CURL*, Chunk*> chunkmap_t;
         typedef std::map<curl_socket_t, Glib::PollFD *> pollmap_t;
 
         struct Manager::Private
@@ -87,7 +87,7 @@ namespace Yatta
             curl_global_cleanup ();
         }
 
-        void Manager::add_handle (Chunk::Ptr chunk)
+        void Manager::add_handle (Chunk *chunk)
         {
             CURL *handle = chunk->handle ();
 
@@ -102,7 +102,7 @@ namespace Yatta
             chunk->signal_started ().emit ();
         }
 
-        void Manager::remove_handle (Chunk::Ptr chunk)
+        void Manager::remove_handle (Chunk *chunk)
         {
             CURL *handle = chunk->handle ();
             remove_handle (handle);
@@ -118,7 +118,7 @@ namespace Yatta
 
         void Manager::remove_handle (chunkmap_t::iterator iter)
         {
-            Chunk::Ptr chunk = iter->second;
+            Chunk *chunk = iter->second;
             _priv->chunkmap.erase (iter);
             _priv->running_handles = _priv->chunkmap.size ();
             chunk->signal_stopped ().emit ();

@@ -50,6 +50,10 @@ namespace Yatta
                 static   Chunk::Ptr create (Download &parent, size_t offset=0);
                 virtual  ~Chunk ();
 
+                // member functions
+                void start ();
+                void stop ();
+
                 // accessor functions
                 // signal when header is received
                 signal_header_t   signal_header ();
@@ -68,6 +72,8 @@ namespace Yatta
 
                 // signal when chunk has finished (might have errors)
                 signal_finished_t signal_finished ();
+
+                bool   running () const;
 
                 // offset accessor (beginning of this chunk)
                 size_t offset () const;

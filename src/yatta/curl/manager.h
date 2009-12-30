@@ -24,18 +24,20 @@
 #include <glibmm/main.h>
 #include <glibmm/refptr.h>
 
-#include "chunk.h"
+#include <curl/curl.h>
 
 namespace Yatta
 {
     namespace Curl
     {
+        class Chunk;
+
         class Manager : public Glib::Source
         {
             public:
                 static Glib::RefPtr<Manager> get ();
-                void add_handle (Chunk::Ptr chunk);
-                void remove_handle (Chunk::Ptr chunk);
+                void add_handle (Chunk *chunk);
+                void remove_handle (Chunk *chunk);
                 virtual ~Manager ();
 
             protected:
@@ -43,7 +45,7 @@ namespace Yatta
 
                 // internal remove_handle functions
                 void remove_handle (CURL *chunk);
-                void remove_handle (std::map <CURL*,Chunk::Ptr>::iterator iter);
+                void remove_handle (std::map <CURL*,Chunk*>::iterator iter);
 
                 // internal socket callback function for passing into libcurl
                 static int on_curl_socket (CURL *easy, // easy handle
