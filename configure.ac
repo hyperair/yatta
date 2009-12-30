@@ -33,6 +33,10 @@ PKG_CHECK_MODULES([CURL], [libcurl])
 
 AC_CONFIG_FILES([
     Makefile
+    src/Makefile
+    src/yatta/Makefile
+    src/yatta/curl/Makefile
+    src/yatta/ui/Makefile
     po/Makefile.in
 ])
 AC_OUTPUT
