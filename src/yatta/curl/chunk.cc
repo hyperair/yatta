@@ -69,11 +69,12 @@ namespace Yatta
             curl_easy_setopt (handle (), CURLOPT_HEADERDATA, this);
 
             // bind the callbacks
-            curl_easy_setopt (handle (), CURLOPT_WRITEFUNCTION, &write_cb);
+            curl_easy_setopt (handle (), CURLOPT_WRITEFUNCTION,
+                              &on_curl_write);
             curl_easy_setopt (handle (), CURLOPT_PROGRESSFUNCTION,
-                              &progress_cb);
+                              &on_curl_progress);
             curl_easy_setopt (handle (), CURLOPT_HEADERFUNCTION,
-                              &header_cb);
+                              &on_curl_header);
         }
 
         // static convenience wrapper to constructor
@@ -146,14 +147,14 @@ namespace Yatta
         }
 
         // static CURL callbacks
-        size_t Chunk::header_cb (void *data, size_t size,
+        size_t Chunk::on_curl_header (void *data, size_t size,
                                  size_t nmemb, void *obj)
         {
             reinterpret_cast<Chunk*> (obj)->signal_header ()
                 .emit (data, size, nmemb);
         }
 
-        size_t Chunk::progress_cb (void *obj,
+        size_t Chunk::on_curl_progress (void *obj,
                 double dltotal, double dlnow,
                 double ultotal, double ulnow)
         {
@@ -166,7 +167,7 @@ namespace Yatta
                 .emit (dltotal, dlnow, ultotal, ulnow);
         }
 
-        size_t Chunk::write_cb (void *data, size_t size,
+        size_t Chunk::on_curl_write (void *data, size_t size,
                                 size_t nmemb, void *obj)
         {
             reinterpret_cast<Chunk*> (obj)->signal_write ()

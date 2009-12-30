@@ -45,7 +45,7 @@ namespace Yatta
                 typedef signal_started_t signal_stopped_t;
                 typedef sigc::signal<void, CURLcode> signal_finished_t;
 
-                // constructors and destructorp
+                // constructors and destructors
                 explicit Chunk (Download &parent, size_t offset=0);
                 static   Chunk::Ptr create (Download &parent, size_t offset=0);
                 virtual  ~Chunk ();
@@ -80,18 +80,19 @@ namespace Yatta
                 CURL * handle ();
 
             protected:
+                // static callbacks for CURL C library
                 // header function
-                static size_t header_cb (void *data, size_t size,
-                                         size_t nmemb, void *obj);
+                static size_t on_curl_header (void *data, size_t size,
+                                               size_t nmemb, void *obj);
 
                 // progress function
-                static size_t progress_cb (void *obj,
-                                           double dltotal, double dlnow,
-                                           double ultotal, double ulnow);
+                static size_t on_curl_progress (void *obj,
+                                                 double dltotal, double dlnow,
+                                                 double ultotal, double ulnow);
 
                 // write function
-                static size_t write_cb (void *data, size_t size,
-                                        size_t nmemb, void *obj);
+                static size_t on_curl_write (void *data, size_t size,
+                                              size_t nmemb, void *obj);
 
             private:
                 struct Private;
