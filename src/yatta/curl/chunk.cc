@@ -171,10 +171,13 @@ namespace Yatta
 
         // static CURL callbacks
         size_t Chunk::on_curl_header (void *data, size_t size,
-                                 size_t nmemb, void *obj)
+                                      size_t nmemb, void *obj)
         {
-            reinterpret_cast<Chunk*> (obj)->signal_header ()
-                .emit (data, size, nmemb);
+            Chunk *self = reinterpret_cast<Chunk*> (obj);
+
+            self->signal_header ().emit (data, size, nmemb);
+
+            return size * nmemb;
         }
 
         size_t Chunk::on_curl_progress (void *obj,
@@ -182,19 +185,23 @@ namespace Yatta
                 double ultotal, double ulnow)
         {
             Chunk *self = reinterpret_cast<Chunk*> (obj);
-            // keep track of where we are and how much to download in order for
-            // tell () to work.
-            self->_priv->downloaded = dlnow;
+
+            // we only update the total to download here, but not the downloaded
+            // bytes because it can skew what tell() says causing bytes to be
+            // written to the wrong location
             self->_priv->total = dltotal;
-            self->signal_progress ()
-                .emit (dltotal, dlnow, ultotal, ulnow);
+            self->signal_progress ().emit (dltotal, dlnow, ultotal, ulnow);
+
+            return 0;
         }
 
         size_t Chunk::on_curl_write (void *data, size_t size,
-                                size_t nmemb, void *obj)
+                                     size_t nmemb, void *obj)
         {
-            reinterpret_cast<Chunk*> (obj)->signal_write ()
-                .emit (data, size, nmemb);
+            Chunk *self = reinterpret_cast<Chunk*> (obj);
+            self->signal_write ().emit (data, size, nmemb);
+            self->_priv->downloaded += size * nmemb;
+            return size * nmemb;
         }
     };
 };
