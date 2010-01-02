@@ -35,13 +35,10 @@ namespace Yatta
         class Download : public sigc::trackable
         {
             public:
-            Download (const Glib::ustring &url,
-                      const std::string &dirname,
-                      const std::string &filename = "");
+                Download (const Glib::ustring &url,
+                          const std::string &dirname,
+                          const std::string &filename = "");
                 virtual ~Download ();
-
-                void add_chunk (); // increases number of running chunks
-                void remove_chunk (); // decreases number of running chunks
 
                 void start ();
                 void stop ();
@@ -60,7 +57,15 @@ namespace Yatta
                 size_t size () const;
 
             protected:
+                // increase number of chunks by num_chunks
+                void add_chunks (unsigned short num_chunks);
+
+                // decrease number of running chunks by num_chunks
+                void stop_chunks (unsigned short num_chunks);
+
                 void normalize_chunks ();
+
+                void connect_chunk_signals (Chunk::Ptr chunk);
 
                 virtual void on_chunk_header (Chunk::Ptr chunk,
                                               void *data,
