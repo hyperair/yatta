@@ -83,7 +83,7 @@ namespace Yatta
         void IOQueue::write (size_t offset, void *data, size_t size)
         {
             // perform isn't in action, so we need to start the chain
-            bool need_perform = _priv->queue.empty () && !_priv->handle;
+            bool need_perform = _priv->queue.empty () && _priv->handle;
             _priv->queue.push_back (Private::Item (offset, data, size));
             if (need_perform)
                 perform ();
