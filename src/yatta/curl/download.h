@@ -57,7 +57,9 @@ namespace Yatta
                 size_t size () const;
 
             private:
-                typedef std::list<Chunk::Ptr> chunk_list_t;
+                typedef std::tr1::shared_ptr<Chunk> chunk_ptr_t;
+                typedef std::tr1::weak_ptr<Chunk> chunk_wptr_t;
+                typedef std::list<chunk_ptr_t> chunk_list_t;
 
             protected:
                 // increase number of chunks by num_chunks
@@ -68,21 +70,24 @@ namespace Yatta
 
                 void normalize_chunks ();
 
-                void connect_chunk_signals (Chunk::Ptr chunk,
+                void connect_chunk_signals (chunk_ptr_t chunk,
                                             chunk_list_t::iterator iter);
 
-                virtual void on_chunk_header (Chunk::Ptr chunk,
+                // use weak_ptr for the functions below to avoid circular
+                // dependencies preventing Chunk from destruction
+                virtual void on_chunk_header (chunk_wptr_t chunk,
                                               void *data,
                                               size_t size,
                                               size_t nmemb);
-                virtual void on_chunk_progress (Chunk::Ptr chunk,
+                virtual void on_chunk_progress (chunk_wptr_t chunk,
                                                 double dltotal,
                                                 double dlnow);
                 virtual void on_chunk_write (chunk_list_t::iterator chunk,
                                              void *data,
                                              size_t size,
                                              size_t nmemb);
-                virtual void chunk_check_resumable (Chunk::Ptr chunk);
+                virtual void chunk_check_resumable (chunk_wptr_t chunk);
+
             private:
                 struct Private;
                 std::tr1::shared_ptr<Private> _priv;

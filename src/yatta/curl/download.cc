@@ -125,7 +125,7 @@ namespace Yatta
                     biggest_gaps.front ().first / 2;
 
                 // create and start chunk
-                Chunk::Ptr chunk (Chunk::create (*this, new_offset));
+                chunk_ptr_t chunk (new Chunk (*this, new_offset));
 
                 connect_chunk_signals (chunk, _priv->chunks.insert (
                                            biggest_gaps.front ().second,
@@ -259,7 +259,7 @@ namespace Yatta
                 stop_chunks (running_chunks - max_chunks);
         }
 
-        void Download::connect_chunk_signals (Chunk::Ptr chunk,
+        void Download::connect_chunk_signals (chunk_ptr_t chunk,
                                               chunk_list_t::iterator iter)
         {
             // connect callbacks to signals, with chunk bound to them
@@ -296,13 +296,14 @@ namespace Yatta
         }
 
         // slots for interfacing with chunks
-        void Download::on_chunk_header (Chunk::Ptr chunk, void *data,
+        void Download::on_chunk_header (chunk_wptr_t weak_chunk, void *data,
                                         size_t size, size_t nmemb)
         {
         }
 
-        void Download::chunk_check_resumable (Chunk::Ptr chunk)
+        void Download::chunk_check_resumable (chunk_wptr_t weak_chunk)
         {
+            chunk_ptr_t chunk = weak_chunk.lock ();
             // TODO: check ftp properly as well
             long status;
 
@@ -318,7 +319,7 @@ namespace Yatta
             _priv->check_resumable_connection.disconnect ();
         }
 
-        void Download::on_chunk_progress (Chunk::Ptr chunk,
+        void Download::on_chunk_progress (chunk_wptr_t weak_chunk,
                                           double dltotal,
                                           double dlnow)
         {
@@ -330,7 +331,7 @@ namespace Yatta
                                        size_t size,
                                        size_t nmemb)
         {
-            Chunk::Ptr chunk = *iter;
+            chunk_ptr_t chunk = *iter;
             _priv->fileio.write (chunk->tell (),
                                  data,
                                  size * nmemb);

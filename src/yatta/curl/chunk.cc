@@ -80,12 +80,6 @@ namespace Yatta
                               &on_curl_header);
         }
 
-        // static convenience wrapper to constructor
-        Chunk::Ptr Chunk::create (Download &parent, size_t offset)
-        {
-            return Chunk::Ptr (new Chunk(parent, offset));
-        }
-
         // destructor
         Chunk::~Chunk ()
         {

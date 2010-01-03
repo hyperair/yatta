@@ -19,6 +19,7 @@
 #define YATTA_CURL_CHUNK_H
 
 #include <tr1/memory>
+
 #include <curl/curl.h>
 #include <sigc++/signal.h>
 
@@ -33,7 +34,6 @@ namespace Yatta
         {
             public:
                 // typedefs
-                typedef std::tr1::shared_ptr<Chunk> Ptr;
                 typedef sigc::signal<void,
                         void* /*data*/, size_t /*size*/,
                         size_t /*nmemb*/> signal_header_t;
@@ -47,7 +47,6 @@ namespace Yatta
 
                 // constructors and destructors
                 explicit Chunk (Download &parent, size_t offset=0);
-                static   Chunk::Ptr create (Download &parent, size_t offset=0);
                 virtual  ~Chunk ();
 
                 // member functions
