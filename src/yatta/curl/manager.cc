@@ -245,8 +245,10 @@ namespace Yatta
                 CURLcode result = msg->data.result;
                 chunkmap_t::iterator iter =
                     _priv->chunkmap.find (handle);
-                if (iter == _priv->chunkmap.end ())
-                    continue; // TODO: report error as a BUG
+                if (iter == _priv->chunkmap.end ()) {
+                    g_critical ("Missing Chunk");
+                    continue;
+                }
 
                 // handle removal of chunk
                 iter->second->signal_finished ().emit (result);
