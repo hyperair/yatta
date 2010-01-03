@@ -106,6 +106,23 @@ namespace Yatta
             _priv->running = false;
         }
 
+        void Chunk::merge (Chunk &previous_chunk)
+        {
+            g_assert (previous_chunk.tell () >= this->offset ());
+
+            size_t new_offset = previous_chunk.offset ();
+            size_t downloaded = MAX (previous_chunk.tell (), tell());
+
+            // set new values for this chunk
+            offset (new_offset);
+            _priv->downloaded = downloaded;
+
+            if (running ()) {
+                start ();
+                stop ();
+            }
+        }
+
         // signal accessors
         Chunk::signal_header_t Chunk::signal_header ()
         {

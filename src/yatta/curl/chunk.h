@@ -54,6 +54,10 @@ namespace Yatta
                 void start ();
                 void stop ();
 
+                // merge previous_chunk into this.
+                // precondition: previous_chunk.tell () >= this->offset ()
+                void merge (Chunk &previous_chunk);
+
                 // accessor functions
                 // signal when header is received
                 signal_header_t   signal_header ();

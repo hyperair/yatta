@@ -29,8 +29,6 @@ namespace Yatta
 {
     namespace Curl
     {
-        typedef std::list<Chunk::Ptr> chunk_list_t;
-
         struct Download::Private
         {
             Private (const Glib::ustring &url,
@@ -129,8 +127,9 @@ namespace Yatta
                 // create and start chunk
                 Chunk::Ptr chunk (Chunk::create (*this, new_offset));
 
-                connect_chunk_signals (chunk);
-                _priv->chunks.insert (biggest_gaps.front ().second, chunk);
+                connect_chunk_signals (chunk, _priv->chunks.insert (
+                                           biggest_gaps.front ().second,
+                                           chunk));
                 chunk->start ();
             }
         }
@@ -260,43 +259,45 @@ namespace Yatta
                 stop_chunks (running_chunks - max_chunks);
         }
 
-        void Download::connect_chunk_signals (Chunk::Ptr chunk)
+        void Download::connect_chunk_signals (Chunk::Ptr chunk,
+                                              chunk_list_t::iterator iter)
         {
             // connect callbacks to signals, with chunk bound to them
             chunk->signal_header ()
-                .connect (sigc::bind<0>
-                          (sigc::mem_fun (*this, &Download::on_chunk_header),
-                           chunk));
+                .connect (sigc::bind<0> (
+                              sigc::mem_fun (*this, &Download::on_chunk_header),
+                              chunk));
             chunk->signal_progress ()
-                .connect (sigc::bind<0>
-                          (sigc::hide
-                           (sigc::hide
-                            (sigc::mem_fun (*this,
-                                            &Download::on_chunk_progress))),
-                           chunk));
+                .connect (sigc::bind<0> (
+                              sigc::hide (
+                                  sigc::hide (
+                                      sigc::mem_fun (
+                                          *this,
+                                          &Download::on_chunk_progress))),
+                              chunk));
             chunk->signal_write ()
-                .connect (sigc::bind<0>
-                          (sigc::mem_fun (*this, &Download::on_chunk_write),
-                           chunk));
+                .connect (sigc::bind<0> (
+                              sigc::mem_fun (*this,
+                                             &Download::on_chunk_write),
+                              iter));
 
             // if this is the first chunk, check if it's resumable
             if (chunk->offset () == 0)
                 _priv->check_resumable_connection =
-                    chunk->signal_header ()
-                    .connect (sigc::hide (sigc::hide
-                                          (sigc::hide
-                                           (sigc::bind
-                                            (sigc::mem_fun
-                                             (*this,
-                                              &Download::chunk_check_resumable),
-                                             chunk)))));
+                    chunk->signal_header ().connect (
+                        sigc::hide (
+                            sigc::hide (
+                                sigc::hide (
+                                    sigc::bind (
+                                        sigc::mem_fun (
+                                            *this,
+                                            &Download::chunk_check_resumable),
+                                        chunk)))));
         }
 
         // slots for interfacing with chunks
-        void Download::on_chunk_header (Chunk::Ptr chunk,
-                                    void *data,
-                                    size_t size,
-                                    size_t nmemb)
+        void Download::on_chunk_header (Chunk::Ptr chunk, void *data,
+                                        size_t size, size_t nmemb)
         {
         }
 
@@ -307,8 +308,7 @@ namespace Yatta
 
             if (curl_easy_getinfo (chunk->handle (),
                                    CURLINFO_RESPONSE_CODE,
-                                   &status)
-                != CURLE_OK)
+                                   &status) != CURLE_OK)
                 return;
 
             _priv->resumable = (status == 206);
@@ -322,17 +322,29 @@ namespace Yatta
                                           double dltotal,
                                           double dlnow)
         {
+            // TODO: Add something here or get rid of it for good
         }
 
-        void Download::on_chunk_write (Chunk::Ptr chunk,
+        void Download::on_chunk_write (chunk_list_t::iterator iter,
                                        void *data,
                                        size_t size,
                                        size_t nmemb)
         {
-            // TODO: check and merge with the next chunk if necessary
+            Chunk::Ptr chunk = *iter;
             _priv->fileio.write (chunk->tell (),
                                  data,
                                  size * nmemb);
+
+            g_assert (iter != _priv->chunks.end ());
+
+            // look at the next chunk and merge if necessary
+            if (++iter != _priv->chunks.end () &&
+                (*iter)->offset () <= chunk->tell ())
+            {
+                (*iter)->merge (*chunk);
+                (*iter)->start ();
+                _priv->chunks.erase (--iter);
+            }
         }
     };
 };

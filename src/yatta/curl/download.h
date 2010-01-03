@@ -56,6 +56,9 @@ namespace Yatta
 
                 size_t size () const;
 
+            private:
+                typedef std::list<Chunk::Ptr> chunk_list_t;
+
             protected:
                 // increase number of chunks by num_chunks
                 void add_chunks (unsigned short num_chunks);
@@ -65,7 +68,8 @@ namespace Yatta
 
                 void normalize_chunks ();
 
-                void connect_chunk_signals (Chunk::Ptr chunk);
+                void connect_chunk_signals (Chunk::Ptr chunk,
+                                            chunk_list_t::iterator iter);
 
                 virtual void on_chunk_header (Chunk::Ptr chunk,
                                               void *data,
@@ -74,7 +78,7 @@ namespace Yatta
                 virtual void on_chunk_progress (Chunk::Ptr chunk,
                                                 double dltotal,
                                                 double dlnow);
-                virtual void on_chunk_write (Chunk::Ptr chunk,
+                virtual void on_chunk_write (chunk_list_t::iterator chunk,
                                              void *data,
                                              size_t size,
                                              size_t nmemb);
