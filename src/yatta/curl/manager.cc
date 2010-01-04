@@ -49,7 +49,7 @@ namespace Yatta
             int running_handles; // number of running handles
             chunkmap_t chunkmap; // map of CURL* to Chunk ptrs
             pollmap_t pollmap; // map of curl sockets to PollFD structs
-            std::queue<std::pair<curl_socket_t, pollptr_t> > active_fds;
+            std::queue<pollptr_t> active_fds;
 
             static Glib::RefPtr<Manager> instance; // singleton instance
         };
@@ -138,8 +138,12 @@ namespace Yatta
             Manager *self = static_cast<Manager *> (userp);
 
             pollmap_t::iterator result = self->_priv->pollmap.find (s);
+
+            // unset pollptr_t if not found. this is to ensure that the PollFD
+            // is not added more than once, which will have disastrous
+            // consequences.
             pollptr_t pollfd = (result != self->_priv->pollmap.end ()) ?
-                result->second : pollptr_t (new Glib::PollFD (s));
+                result->second : pollptr_t ();
 
             switch (action)
             {
@@ -154,18 +158,23 @@ namespace Yatta
                 if (action & CURL_POLL_OUT)
                     flags |= Glib::IO_OUT;
 
-                pollfd->set_events (flags);
+                if (pollfd) // pollfd was found from map. no need to add again
+                    pollfd->set_events (flags);
+                else {
+                    pollfd = pollptr_t (new Glib::PollFD (s, flags));
+                    self->_priv->pollmap[s] = pollfd;
+                    self->add_poll (*pollfd);
+                }
 
-                self->_priv->pollmap[s] = pollfd;
-                self->add_poll (*pollfd);
                 break;
             }
 
             case CURL_POLL_NONE:
             case CURL_POLL_REMOVE:
                 // removing a poll
-                if (pollfd)
-                    self->remove_poll (*pollfd);
+                self->remove_poll (*pollfd);
+
+                // free the pollfd up
                 self->_priv->pollmap.erase (result);
             }
 
@@ -189,12 +198,12 @@ namespace Yatta
             curl_multi_timeout (_priv->multihandle, &timeout);
             if (timeout == 0) return true;
 
-            // or if we've got activity on one poll
+            // keep track of all active FDs
             for (pollmap_t::iterator i = _priv->pollmap.begin ();
                  i != _priv->pollmap.end ();
                  ++i)
                 if (i->second->get_revents () & i->second->get_events ())
-                    _priv->active_fds.push (std::make_pair (i->first, i->second));
+                    _priv->active_fds.push (i->second);
 
             return !_priv->active_fds.empty ();
         }
@@ -208,7 +217,7 @@ namespace Yatta
             for (; !_priv->active_fds.empty (); _priv->active_fds.pop ())
             {
                 Glib::IOCondition flags =
-                    _priv->active_fds.front ().second->get_revents ();
+                    _priv->active_fds.front ()->get_revents ();
 
                 int evmask = 0;
                 if (flags & (Glib::IO_IN | Glib::IO_PRI))
@@ -221,7 +230,7 @@ namespace Yatta
                 if (evmask == 0) continue;
 
                 curl_multi_socket_action (_priv->multihandle,
-                                          _priv->active_fds.front ().first,
+                                          _priv->active_fds.front ()->get_fd (),
                                           evmask, &running_handles);
             }
 
