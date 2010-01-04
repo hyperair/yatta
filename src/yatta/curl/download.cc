@@ -35,6 +35,8 @@ namespace Yatta
                      const std::string &dirname,
                      const std::string &filename = "") :
                 url (url),
+                chunks (0),
+                max_chunks (10),
                 resumable (false),
                 size (0),
                 running (false),
@@ -76,37 +78,39 @@ namespace Yatta
             std::queue<std::pair<size_t /*gap*/,
                 chunk_list_t::iterator /*next_chunk*/> > biggest_gaps;
 
-            // if no chunks already exist, start from the beginning. no need to
-            // jump directly to adding new chunks because the next two blocks
-            // will no-op
-            if (_priv->chunks.empty ())
-                biggest_gaps.push (std::make_pair (0, _priv->chunks.end ()));
-
-            // if not resumable, adding chunks won't make a difference
-            else if (!resumable ())
+            // if no chunks already exist, start from the beginning. we don't
+            // want to add more than one chunk yet because we don't know whether
+            // it's resumable or not
+            if (_priv->chunks.empty ()) {
+                chunk_ptr_t chunk (new Chunk (*this, 0));
+                _priv->chunks.push_back (chunk);
+                connect_chunk_signals (chunk, _priv->chunks.begin ());
+                chunk->start ();
+                return;
+            } else if (!resumable ()) // if !resumable, no point adding
                 return;
 
             // find biggest undownloaded gap. use two iterators at once, since
             // we're looking at the gap between i and j
-            for (chunk_list_t::iterator j = _priv->chunks.begin (),
-                     i = j++;
-                 j != _priv->chunks.end ();
-                 i = j++)
-            {
-                size_t current_gap_size = (*i)->offset () - (*j)->tell ();
-
-                // we only want gaps >= current biggest
-                if (!biggest_gaps.empty () &&
-                    current_gap_size < biggest_gaps.back ().first)
-                    continue;
-
-                // push to queue of new chunks
-                biggest_gaps.push (std::make_pair (current_gap_size, j));
-                if (biggest_gaps.size () > num_chunks) biggest_gaps.pop ();
-            }
-
-            // check the size between the last chunk and EOF
             if (!_priv->chunks.empty ()) {
+                for (chunk_list_t::iterator j = _priv->chunks.begin (),
+                         i = j++;
+                     j != _priv->chunks.end ();
+                     i = j++)
+                {
+                    size_t current_gap_size = (*i)->offset () - (*j)->tell ();
+
+                    // we only want gaps >= current biggest
+                    if (!biggest_gaps.empty () &&
+                        current_gap_size < biggest_gaps.back ().first)
+                        continue;
+
+                    // push to queue of new chunks
+                    biggest_gaps.push (std::make_pair (current_gap_size, j));
+                    if (biggest_gaps.size () > num_chunks) biggest_gaps.pop ();
+                }
+
+                // check the size between the last chunk and EOF
                 size_t current_gap_size = size () -
                     (_priv->chunks.back ())->tell ();
 
@@ -126,7 +130,6 @@ namespace Yatta
 
                 // create and start chunk
                 chunk_ptr_t chunk (new Chunk (*this, new_offset));
-
                 connect_chunk_signals (chunk, _priv->chunks.insert (
                                            biggest_gaps.front ().second,
                                            chunk));

@@ -15,8 +15,11 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <glibmm/dispatcher.h>
 #include <iostream>
+#include <queue>
+#include <map>
+
+#include <glibmm/dispatcher.h>
 
 #include "manager.h"
 #include "chunk.h"
@@ -25,15 +28,19 @@ namespace Yatta
 {
     namespace Curl
     {
+        typedef std::tr1::shared_ptr<Glib::PollFD> pollptr_t;
         typedef std::map<CURL*, Chunk*> chunkmap_t;
-        typedef std::map<curl_socket_t, Glib::PollFD *> pollmap_t;
+        typedef std::map<curl_socket_t, pollptr_t> pollmap_t;
 
         struct Manager::Private
         {
             Private () :
                 multihandle (NULL),
                 sharehandle (NULL),
-                running_handles (0)
+                running_handles (0),
+                chunkmap (),
+                pollmap (),
+                active_fds ()
                 {}
 
             CURLM *multihandle; // only multi handle which will be used
@@ -42,6 +49,7 @@ namespace Yatta
             int running_handles; // number of running handles
             chunkmap_t chunkmap; // map of CURL* to Chunk ptrs
             pollmap_t pollmap; // map of curl sockets to PollFD structs
+            std::queue<std::pair<curl_socket_t, pollptr_t> > active_fds;
 
             static Glib::RefPtr<Manager> instance; // singleton instance
         };
@@ -130,8 +138,8 @@ namespace Yatta
             Manager *self = static_cast<Manager *> (userp);
 
             pollmap_t::iterator result = self->_priv->pollmap.find (s);
-            Glib::PollFD *pollfd = (result == self->_priv->pollmap.end ()) ?
-                result->second : 0;
+            pollptr_t pollfd = (result != self->_priv->pollmap.end ()) ?
+                result->second : pollptr_t (new Glib::PollFD (s));
 
             switch (action)
             {
@@ -146,10 +154,7 @@ namespace Yatta
                 if (action & CURL_POLL_OUT)
                     flags |= Glib::IO_OUT;
 
-                if (! pollfd) {
-                }
-                else
-                    pollfd->set_events (flags);
+                pollfd->set_events (flags);
 
                 self->_priv->pollmap[s] = pollfd;
                 self->add_poll (*pollfd);
@@ -161,7 +166,6 @@ namespace Yatta
                 // removing a poll
                 if (pollfd)
                     self->remove_poll (*pollfd);
-                delete pollfd;
                 self->_priv->pollmap.erase (result);
             }
 
@@ -172,7 +176,7 @@ namespace Yatta
         bool Manager::prepare (int &timeout)
         {
             long timeout2;
-            timeout = curl_multi_timeout (_priv->multihandle, &timeout2);
+            curl_multi_timeout (_priv->multihandle, &timeout2);
             timeout = static_cast<int> (timeout2);
 
             return (timeout == 0);
@@ -189,12 +193,10 @@ namespace Yatta
             for (pollmap_t::iterator i = _priv->pollmap.begin ();
                  i != _priv->pollmap.end ();
                  ++i)
-            {
-                if (i->second->get_revents ())
-                    return true;
-            }
+                if (i->second->get_revents () & i->second->get_events ())
+                    _priv->active_fds.push (std::make_pair (i->first, i->second));
 
-            return false;
+            return !_priv->active_fds.empty ();
         }
 
         bool Manager::dispatch (sigc::slot_base *slot)
@@ -202,12 +204,11 @@ namespace Yatta
             // copy the current running handles over
             int running_handles = _priv->running_handles;
 
-            // check all the polls
-            for (pollmap_t::iterator i = _priv->pollmap.begin ();
-                 i != _priv->pollmap.end ();
-                 ++i)
+            // for all active FDs, tell curl
+            for (; !_priv->active_fds.empty (); _priv->active_fds.pop ())
             {
-                Glib::IOCondition flags = i->second->get_revents ();
+                Glib::IOCondition flags =
+                    _priv->active_fds.front ().second->get_revents ();
 
                 int evmask = 0;
                 if (flags & (Glib::IO_IN | Glib::IO_PRI))
@@ -217,9 +218,10 @@ namespace Yatta
                 if (flags & (Glib::IO_ERR | Glib::IO_HUP))
                     evmask |= CURL_CSELECT_ERR;
 
-                if (evmask != 0) continue;
+                if (evmask == 0) continue;
 
-                curl_multi_socket_action (_priv->multihandle, i->first,
+                curl_multi_socket_action (_priv->multihandle,
+                                          _priv->active_fds.front ().first,
                                           evmask, &running_handles);
             }
 
