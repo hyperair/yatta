@@ -263,28 +263,28 @@ namespace Yatta
                                               chunk_list_t::iterator iter)
         {
             // connect callbacks to signals, with chunk bound to them
-            chunk->signal_header ()
-                .connect (sigc::bind<0> (
-                              sigc::mem_fun (*this, &Download::on_chunk_header),
-                              chunk));
-            chunk->signal_progress ()
-                .connect (sigc::bind<0> (
-                              sigc::hide (
-                                  sigc::hide (
-                                      sigc::mem_fun (
-                                          *this,
-                                          &Download::on_chunk_progress))),
-                              chunk));
-            chunk->signal_write ()
-                .connect (sigc::bind<0> (
-                              sigc::mem_fun (*this,
-                                             &Download::on_chunk_write),
-                              iter));
+            chunk->connect_signal_header (
+                sigc::bind<0> (
+                    sigc::mem_fun (*this, &Download::on_chunk_header),
+                    chunk));
+            chunk->connect_signal_progress (
+                sigc::bind<0> (
+                    sigc::hide (
+                        sigc::hide (
+                            sigc::mem_fun (
+                                *this,
+                                &Download::on_chunk_progress))),
+                    chunk));
+            chunk->connect_signal_write (
+                sigc::bind<0> (
+                    sigc::mem_fun (*this,
+                                   &Download::on_chunk_write),
+                    iter));
 
             // if this is the first chunk, check if it's resumable
             if (chunk->offset () == 0)
                 _priv->check_resumable_connection =
-                    chunk->signal_header ().connect (
+                    chunk->connect_signal_header (
                         sigc::hide (
                             sigc::hide (
                                 sigc::hide (

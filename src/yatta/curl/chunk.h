@@ -21,7 +21,8 @@
 #include <tr1/memory>
 
 #include <curl/curl.h>
-#include <sigc++/signal.h>
+#include <sigc++/slot.h>
+#include <sigc++/connection.h>
 
 namespace Yatta
 {
@@ -34,24 +35,30 @@ namespace Yatta
         {
             public:
                 // typedefs
-                typedef sigc::signal<void,
+                typedef sigc::slot<void,
                         void* /*data*/, size_t /*size*/,
-                        size_t /*nmemb*/> signal_header_t;
-                typedef sigc::signal<void,
+                        size_t /*nmemb*/> slot_header_t;
+                typedef sigc::slot<void,
                     double /*dltotal*/, double /*dlnow*/,
-                    double /*ultotal*/, double /*ulnow*/> signal_progress_t;
-                typedef signal_header_t signal_write_t;
-                typedef sigc::signal<void> signal_started_t;
-                typedef signal_started_t signal_stopped_t;
-                typedef sigc::signal<void, CURLcode> signal_finished_t;
+                    double /*ultotal*/, double /*ulnow*/> slot_progress_t;
+                typedef slot_header_t slot_write_t;
+                typedef sigc::slot<void> slot_started_t;
+                typedef slot_started_t slot_stopped_t;
+                typedef sigc::slot<void, CURLcode> slot_finished_t;
 
                 // constructors and destructors
                 explicit Chunk (Download &parent, size_t offset=0);
                 virtual  ~Chunk ();
 
                 // member functions
+                // start the chunk running
                 void start ();
+                // stop the chunk
                 void stop ();
+
+                // stop the chunk because it has finished (will emit
+                // signal_finished)
+                void stop_finished (CURLcode result);
 
                 // merge previous_chunk into this.
                 // precondition: previous_chunk.tell () >= this->offset ()
@@ -59,30 +66,33 @@ namespace Yatta
 
                 // accessor functions
                 // signal when header is received
-                signal_header_t   signal_header ();
+                sigc::connection connect_signal_header (slot_header_t slot);
 
                 // signal when libcurl calls progress function
-                signal_progress_t signal_progress ();
+                sigc::connection connect_signal_progress (slot_progress_t slot);
 
                 // signal when there is stuff to write
-                signal_write_t    signal_write ();
+                sigc::connection connect_signal_write (slot_write_t slot);
 
                 // signal when chunk is added to the Manager
-                signal_started_t  signal_started ();
+                sigc::connection connect_signal_started (slot_started_t slot);
 
-                // signal when chunk is removed from Manager
-                signal_stopped_t  signal_stopped ();
+                // signal when chunk is stopped
+                sigc::connection connect_signal_stopped (slot_stopped_t slot);
 
                 // signal when chunk has finished (might have errors)
-                signal_finished_t signal_finished ();
+                sigc::connection connect_signal_finished (slot_finished_t slot);
 
+                // check if the chunk is running.
                 bool   running () const;
 
                 // offset accessor (beginning of this chunk)
                 size_t offset () const;
                 void   offset (const size_t & arg);
+
                 // how many bytes in this chunk downloaded
                 size_t downloaded () const;
+
                 // current position accessor (offset + downloaded)
                 size_t tell () const;
 

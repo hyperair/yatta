@@ -15,6 +15,8 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sigc++/signal.h>
+
 #include "chunk.h"
 #include "download.h"
 #include "manager.h"
@@ -23,6 +25,21 @@ namespace Yatta
 {
     namespace Curl
     {
+        // typedefs
+        typedef sigc::signal<void,
+                           void* /*data*/, size_t /*size*/,
+                           size_t /*nmemb*/>
+        signal_header_t;
+        typedef sigc::signal<void,
+                           double /*dltotal*/, double /*dlnow*/,
+                           double /*ultotal*/, double /*ulnow*/>
+        signal_progress_t;
+        typedef signal_header_t signal_write_t;
+        typedef sigc::signal<void> signal_started_t;
+        typedef signal_started_t signal_stopped_t;
+        typedef sigc::signal<void, CURLcode> signal_finished_t;
+
+
         // first the private class implementation
         struct Chunk::Private
         {
@@ -92,12 +109,20 @@ namespace Yatta
         {
             Manager::get ()->add_handle (this);
             _priv->running = true;
+            _priv->signal_started.emit ();
         }
 
         void Chunk::stop ()
         {
             Manager::get ()->remove_handle (this);
             _priv->running = false;
+            _priv->signal_stopped.emit ();
+        }
+
+        void Chunk::stop_finished (CURLcode result)
+        {
+            _priv->signal_finished.emit (result);
+            stop ();
         }
 
         void Chunk::merge (Chunk &previous_chunk)
@@ -118,34 +143,40 @@ namespace Yatta
         }
 
         // signal accessors
-        Chunk::signal_header_t Chunk::signal_header ()
+        sigc::connection Chunk::connect_signal_header (
+            Chunk::slot_header_t slot)
         {
-            return _priv->signal_header;
+            return _priv->signal_header.connect (slot);
         }
 
-        Chunk::signal_progress_t Chunk::signal_progress ()
+        sigc::connection Chunk::connect_signal_progress (
+            Chunk::slot_progress_t slot)
         {
-            return _priv->signal_progress;
+            return _priv->signal_progress.connect (slot);
         }
 
-        Chunk::signal_write_t Chunk::signal_write ()
+        sigc::connection Chunk::connect_signal_write (
+            Chunk::slot_write_t slot)
         {
-            return _priv->signal_write;
+            return _priv->signal_write.connect (slot);
         }
 
-        Chunk::signal_started_t Chunk::signal_started ()
+        sigc::connection Chunk::connect_signal_started (
+            Chunk::slot_started_t slot)
         {
-            return _priv->signal_started;
+            return _priv->signal_started.connect (slot);
         }
 
-        Chunk::signal_stopped_t Chunk::signal_stopped ()
+        sigc::connection Chunk::connect_signal_stopped (
+            Chunk::slot_stopped_t slot)
         {
-            return _priv->signal_stopped;
+            return _priv->signal_stopped.connect (slot);
         }
 
-        Chunk::signal_finished_t Chunk::signal_finished ()
+        sigc::connection Chunk::connect_signal_finished (
+            Chunk::slot_finished_t slot)
         {
-            return _priv->signal_finished;
+            return _priv->signal_finished.connect (slot);
         }
 
         // I/O status accessors
@@ -186,7 +217,7 @@ namespace Yatta
         {
             Chunk *self = reinterpret_cast<Chunk*> (obj);
 
-            self->signal_header ().emit (data, size, nmemb);
+            self->_priv->signal_header.emit (data, size, nmemb);
 
             return size * nmemb;
         }
@@ -201,7 +232,7 @@ namespace Yatta
             // bytes because it can skew what tell() says causing bytes to be
             // written to the wrong location
             self->_priv->total = dltotal;
-            self->signal_progress ().emit (dltotal, dlnow, ultotal, ulnow);
+            self->_priv->signal_progress.emit (dltotal, dlnow, ultotal, ulnow);
 
             return 0;
         }
@@ -210,7 +241,7 @@ namespace Yatta
                                      size_t nmemb, void *obj)
         {
             Chunk *self = reinterpret_cast<Chunk*> (obj);
-            self->signal_write ().emit (data, size, nmemb);
+            self->_priv->signal_write.emit (data, size, nmemb);
             self->_priv->downloaded += size * nmemb;
             return size * nmemb;
         }

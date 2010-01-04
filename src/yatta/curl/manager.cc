@@ -98,8 +98,6 @@ namespace Yatta
 
             _priv->chunkmap.insert (std::make_pair (handle, chunk));
             _priv->running_handles++;
-
-            chunk->signal_started ().emit ();
         }
 
         void Manager::remove_handle (Chunk *chunk)
@@ -121,7 +119,6 @@ namespace Yatta
             Chunk *chunk = iter->second;
             _priv->chunkmap.erase (iter);
             _priv->running_handles = _priv->chunkmap.size ();
-            chunk->signal_stopped ().emit ();
         }
 
         int Manager::on_curl_socket (CURL *easy,
@@ -251,8 +248,7 @@ namespace Yatta
                 }
 
                 // handle removal of chunk
-                iter->second->signal_finished ().emit (result);
-                remove_handle (iter);
+                iter->second->stop_finished (result);
             }
 
             _priv->running_handles = running_handles;
