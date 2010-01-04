@@ -41,7 +41,8 @@ namespace Yatta
                 size (0),
                 running (false),
                 fileio (dirname, filename),
-                check_resumable_connection ()
+                check_resumable_connection (),
+                get_size_connection ()
             {}
 
             Glib::ustring    url;
@@ -52,6 +53,7 @@ namespace Yatta
             bool             running;
             IOQueue          fileio;
             sigc::connection check_resumable_connection;
+            sigc::connection get_size_connection;
         };
 
         // constructor
@@ -87,49 +89,43 @@ namespace Yatta
                 connect_chunk_signals (chunk, _priv->chunks.begin ());
                 chunk->start ();
                 return;
-            } else if (!resumable ()) // if !resumable, no point adding
+            } else if (!resumable () || size () == 0 || size () == -1)
+                // if !resumable, no point adding
                 return;
 
-            // find biggest undownloaded gap. use two iterators at once, since
-            // we're looking at the gap between i and j
-            if (!_priv->chunks.empty ()) {
-                for (chunk_list_t::iterator j = _priv->chunks.begin (),
-                         i = j++;
-                     j != _priv->chunks.end ();
-                     i = j++)
-                {
-                    size_t current_gap_size = (*i)->offset () - (*j)->tell ();
+            // ! _priv->chunks.empty ()
+            // look for largest undownloaded gap
+            for (chunk_list_t::iterator i = _priv->chunks.begin ();
+                 i != _priv->chunks.end ();
+                 ++i)
+            {
+                chunk_list_t::iterator next = i;
+                next++;
+                size_t next_offset = next == _priv->chunks.end () ?
+                    size () : (*next)->offset ();
+                size_t current_gap = next_offset - (*i)->tell ();
 
-                    // we only want gaps >= current biggest
-                    if (!biggest_gaps.empty () &&
-                        current_gap_size < biggest_gaps.back ().first)
-                        continue;
+                // keep track of all the biggest gaps
+                if (biggest_gaps.empty () ||
+                    current_gap >= biggest_gaps.back ().first)
+                    biggest_gaps.push (std::make_pair (current_gap, next));
 
-                    // push to queue of new chunks
-                    biggest_gaps.push (std::make_pair (current_gap_size, j));
-                    if (biggest_gaps.size () > num_chunks) biggest_gaps.pop ();
-                }
-
-                // check the size between the last chunk and EOF
-                size_t current_gap_size = size () -
-                    (_priv->chunks.back ())->tell ();
-
-                // if the last gap is big enough, add it to the list
-                if (current_gap_size >= biggest_gaps.back ().first) {
-                    biggest_gaps.push (std::make_pair (current_gap_size,
-                                                       _priv->chunks.end ()));
-                    if (biggest_gaps.size () > num_chunks) biggest_gaps.pop ();
-                }
+                // trim size of queue
+                if (biggest_gaps.size () > num_chunks) biggest_gaps.pop ();
             }
+            // biggest_gaps.size () >= 1
 
             // add new chunks
             for (; !biggest_gaps.empty (); biggest_gaps.pop ()) {
                 // new offset is centrepoint of gap
-                size_t new_offset = (*biggest_gaps.front ().second)->tell () +
+                size_t next_offset =
+                    biggest_gaps.front ().second == _priv->chunks.end () ?
+                    size () : (*biggest_gaps.front ().second)->tell ();
+                size_t new_chunk_offset = next_offset +
                     biggest_gaps.front ().first / 2;
 
                 // create and start chunk
-                chunk_ptr_t chunk (new Chunk (*this, new_offset));
+                chunk_ptr_t chunk (new Chunk (*this, new_chunk_offset));
                 connect_chunk_signals (chunk, _priv->chunks.insert (
                                            biggest_gaps.front ().second,
                                            chunk));
@@ -224,6 +220,7 @@ namespace Yatta
                 return;
             }
 
+            g_debug ("resumable: %s", resumable () ? "true" : "false");
             // if not resumable, there can only be one chunk so do nothing
             if (!resumable ()) return;
 
@@ -236,18 +233,18 @@ namespace Yatta
             // start more chunks if we haven't reached max
             if (running_chunks < max_chunks) {
                 // if max > total, then start all existing chunks
-                if (max_chunks >= total_chunks &&
-                    running_chunks < total_chunks) {
-                    for (chunk_list_t::iterator i = _priv->chunks.begin ();
-                         i != _priv->chunks.end ();
-                         i++)
-                        (*i)->start ();
+                if (max_chunks >= total_chunks) {
+                    if (running_chunks < total_chunks)
+                        for (chunk_list_t::iterator i = _priv->chunks.begin ();
+                             i != _priv->chunks.end ();
+                             i++)
+                            (*i)->start ();
 
                     // all existing chunks are now running
                     // running_chunks = total_chunks;
 
                     // add remaining chunks to reach maximum
-                    add_chunks (max_chunks - running_chunks);
+                    add_chunks (max_chunks - total_chunks);
                 } else if (max_chunks < total_chunks &&
                            running_chunks < max_chunks) {
                     // start first (max_chunks - running_chunks) chunks. if they
@@ -260,6 +257,10 @@ namespace Yatta
                 }
             } else // running_chunks > max_chunks
                 stop_chunks (running_chunks - max_chunks);
+
+            g_debug ("%s: current # of chunks: %d",
+                     __PRETTY_FUNCTION__,
+                     _priv->chunks.size ());
         }
 
         void Download::connect_chunk_signals (chunk_ptr_t chunk,
@@ -285,7 +286,7 @@ namespace Yatta
                     iter));
 
             // if this is the first chunk, check if it's resumable
-            if (chunk->offset () == 0)
+            if (chunk->offset () == 0) {
                 _priv->check_resumable_connection =
                     chunk->connect_signal_header (
                         sigc::hide (
@@ -296,12 +297,23 @@ namespace Yatta
                                             *this,
                                             &Download::chunk_check_resumable),
                                         chunk)))));
+                _priv->get_size_connection = chunk->connect_signal_header (
+                    sigc::hide (
+                        sigc::hide (
+                            sigc::hide (
+                                sigc::bind (
+                                    sigc::mem_fun (
+                                        *this,
+                                        &Download::chunk_get_size),
+                                    chunk)))));
+            }
         }
 
         // slots for interfacing with chunks
         void Download::on_chunk_header (chunk_wptr_t weak_chunk, void *data,
                                         size_t size, size_t nmemb)
         {
+            // TODO: if filename is empty, here's where we figure it out
         }
 
         void Download::chunk_check_resumable (chunk_wptr_t weak_chunk)
@@ -312,14 +324,34 @@ namespace Yatta
 
             if (curl_easy_getinfo (chunk->handle (),
                                    CURLINFO_RESPONSE_CODE,
-                                   &status) != CURLE_OK)
+                                   &status) != CURLE_OK ||
+                status == 0)
                 return;
 
             _priv->resumable = (status == 206);
             normalize_chunks ();
 
-            // we only want to be called once, so disconnect the slot
+            // we have our data, it's not going to change, so disconnect
             _priv->check_resumable_connection.disconnect ();
+        }
+
+        void Download::chunk_get_size (chunk_wptr_t weak_chunk)
+        {
+            chunk_ptr_t chunk = weak_chunk.lock ();
+
+            double size;
+            // if size isn't provided, return.
+            if (curl_easy_getinfo (chunk->handle (),
+                                   CURLINFO_CONTENT_LENGTH_DOWNLOAD,
+                                   &size) != CURLE_OK ||
+                size == 0 || size == -1)
+                return;
+
+            _priv->size = static_cast<size_t> (size);
+            normalize_chunks ();
+
+            // we have our data, so disconnect
+            _priv->get_size_connection.disconnect ();
         }
 
         void Download::on_chunk_progress (chunk_wptr_t weak_chunk,

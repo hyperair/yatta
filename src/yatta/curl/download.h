@@ -86,7 +86,8 @@ namespace Yatta
                                              void *data,
                                              size_t size,
                                              size_t nmemb);
-                virtual void chunk_check_resumable (chunk_wptr_t chunk);
+                void chunk_check_resumable (chunk_wptr_t chunk);
+                void chunk_get_size (chunk_wptr_t chunk);
 
             private:
                 struct Private;

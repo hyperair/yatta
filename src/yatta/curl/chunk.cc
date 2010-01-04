@@ -15,6 +15,7 @@
  *      along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sstream>
 #include <sigc++/signal.h>
 
 #include "chunk.h"
@@ -82,6 +83,17 @@ namespace Yatta
             curl_easy_setopt (handle (), CURLOPT_URL,
                               parent.url ().c_str ());
             curl_easy_setopt (handle (), CURLOPT_RESUME_FROM, offset);
+
+            // hack to make libcurl pass the range anyway..
+            if (offset == 0) {
+                struct curl_slist *headers = NULL;
+                std::ostringstream ss;
+                ss << "Range: bytes=" << offset << "-";
+                headers = curl_slist_append (
+                    headers,
+                    ss.str ().c_str ());
+                curl_easy_setopt (handle (), CURLOPT_HTTPHEADER, headers);
+            }
 
             // make curl pass this into the callbacks
             curl_easy_setopt (handle (), CURLOPT_WRITEDATA, this);
