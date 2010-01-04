@@ -36,6 +36,7 @@ AC_CONFIG_FILES([
     src/Makefile
     src/yatta/Makefile
     src/yatta/curl/Makefile
+    src/yatta/curl/tests/Makefile
     src/yatta/ui/Makefile
     po/Makefile.in
 ])

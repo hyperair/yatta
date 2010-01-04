@@ -13,3 +13,5 @@ yatta_CXXFLAGS += \
 
 yatta_LDADD += \
 	$(CURL_LIBS)
+
+include src/yatta/curl/tests/rules.mk
