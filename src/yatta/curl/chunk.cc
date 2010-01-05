@@ -119,6 +119,7 @@ namespace Yatta
         //member functions
         void Chunk::start ()
         {
+            if (running ()) return;
             Manager::get ()->add_handle (this);
             _priv->running = true;
             _priv->signal_started.emit ();
@@ -126,6 +127,7 @@ namespace Yatta
 
         void Chunk::stop ()
         {
+            if (!running ()) return;
             Manager::get ()->remove_handle (this);
             _priv->running = false;
             _priv->signal_stopped.emit ();
