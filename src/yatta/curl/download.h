@@ -56,6 +56,14 @@ namespace Yatta
 
                 size_t size () const;
 
+                // signals
+                sigc::connection
+                    connect_signal_started (const sigc::slot<void> &slot);
+                sigc::connection
+                    connect_signal_stopped (const sigc::slot<void> &slot);
+                sigc::connection
+                    connect_signal_finished (const sigc::slot<void> &slot);
+
             private:
                 typedef std::tr1::shared_ptr<Chunk> chunk_ptr_t;
                 typedef std::tr1::weak_ptr<Chunk> chunk_wptr_t;
@@ -86,6 +94,7 @@ namespace Yatta
                                              void *data,
                                              size_t size,
                                              size_t nmemb);
+                virtual void on_chunk_finished (chunk_wptr_t chunk);
                 void chunk_check_resumable (chunk_wptr_t chunk);
                 void chunk_get_size (chunk_wptr_t chunk);
 

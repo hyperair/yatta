@@ -19,6 +19,7 @@
 
 #include <sigc++/bind.h>
 #include <sigc++/hide.h>
+#include <sigc++/signal.h>
 #include <sigc++/connection.h>
 
 #include "download.h"
@@ -45,15 +46,18 @@ namespace Yatta
                 get_size_connection ()
             {}
 
-            Glib::ustring    url;
-            chunk_list_t     chunks;
-            unsigned short   max_chunks;
-            bool             resumable;
-            size_t           size;
-            bool             running;
-            IOQueue          fileio;
-            sigc::connection check_resumable_connection;
-            sigc::connection get_size_connection;
+            Glib::ustring      url;
+            chunk_list_t       chunks;
+            unsigned short     max_chunks;
+            bool               resumable;
+            size_t             size;
+            bool               running;
+            IOQueue            fileio;
+            sigc::signal<void> signal_started;
+            sigc::signal<void> signal_finished;
+            sigc::signal<void> signal_stopped;
+            sigc::connection   check_resumable_connection;
+            sigc::connection   get_size_connection;
         };
 
         // constructor
@@ -150,6 +154,8 @@ namespace Yatta
             // set status and wake up all the chunks
             _priv->running = true;
             normalize_chunks ();
+
+            _priv->signal_started.emit ();
         }
 
         void Download::stop ()
@@ -163,6 +169,8 @@ namespace Yatta
                  i != _priv->chunks.end ();
                  i++)
                 (*i)->stop ();
+
+            _priv->signal_stopped.emit ();
         }
 
         // accessor methods
@@ -211,6 +219,24 @@ namespace Yatta
             return _priv->size;
         }
 
+        sigc::connection
+        Download::connect_signal_started (const sigc::slot<void> &slot)
+        {
+            return _priv->signal_started.connect (slot);
+        }
+
+        sigc::connection
+        Download::connect_signal_stopped (const sigc::slot<void> &slot)
+        {
+            return _priv->signal_stopped.connect (slot);
+        }
+
+        sigc::connection
+        Download::connect_signal_finished (const sigc::slot<void> &slot)
+        {
+            return _priv->signal_finished.connect (slot);
+        }
+
         void Download::normalize_chunks ()
         {
             if (_priv->chunks.empty ()) {
@@ -257,10 +283,6 @@ namespace Yatta
                 }
             } else // running_chunks > max_chunks
                 stop_chunks (running_chunks - max_chunks);
-
-            g_debug ("%s: current # of chunks: %d",
-                     __PRETTY_FUNCTION__,
-                     _priv->chunks.size ());
         }
 
         void Download::connect_chunk_signals (chunk_ptr_t chunk,
@@ -284,6 +306,14 @@ namespace Yatta
                     sigc::mem_fun (*this,
                                    &Download::on_chunk_write),
                     iter));
+
+            // hook up to the chunk's finish signal
+            chunk->connect_signal_finished (
+                sigc::bind<0> (
+                    sigc::hide (
+                        sigc::mem_fun (*this,
+                                       &Download::on_chunk_finished)),
+                        chunk));
 
             // if this is the first chunk, check if it's resumable
             if (chunk->offset () == 0) {
@@ -380,6 +410,15 @@ namespace Yatta
                 (*iter)->merge (*chunk);
                 (*iter)->start ();
                 _priv->chunks.erase (--iter);
+            }
+        }
+
+        void Download::on_chunk_finished (Download::chunk_wptr_t weak_chunk)
+        {
+            chunk_ptr_t chunk = weak_chunk.lock ();
+            if (_priv->chunks.size () == 1 && size () == chunk->tell ()) {
+                _priv->signal_finished.emit ();
+                stop ();
             }
         }
     };
