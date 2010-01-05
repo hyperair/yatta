@@ -1,4 +1,4 @@
-clean all run gdb valgrind cscope:
+clean all run gdb valgrind cscope check:
 	cd $(top_srcdir) && $(MAKE) $@
 
-.PHONY: clean all run gdb valgrind cscope
+.PHONY: clean all run gdb valgrind cscope check
