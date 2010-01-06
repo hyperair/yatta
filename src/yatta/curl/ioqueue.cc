@@ -16,7 +16,7 @@
  */
 
 #include <giomm.h>
-#include <list>
+#include <queue>
 #include <cstring>
 #include "ioqueue.h"
 
@@ -31,7 +31,8 @@ namespace Yatta
                 dirname (dirname),
                 filename (filename),
                 queue (),
-                handle ()
+                handle (),
+                loop (Glib::MainLoop::create ())
             {}
 
             struct Item
@@ -52,8 +53,9 @@ namespace Yatta
 
             std::string dirname;
             std::string filename;
-            std::list<Item> queue;
+            std::queue<Item> queue;
             Glib::RefPtr<Gio::FileOutputStream> handle;
+            Glib::RefPtr<Glib::MainLoop> loop;
         };
 
         IOQueue::IOQueue (const std::string &dirname,
@@ -73,18 +75,21 @@ namespace Yatta
             gfile->create_file_async
                 (sigc::bind<0> (sigc::mem_fun (*this,
                                                &IOQueue::create_file_finish),
-                                gfile));
+                                gfile), Gio::FILE_CREATE_REPLACE_DESTINATION);
         }
 
         IOQueue::~IOQueue ()
         {
+            // we must finish all writes first. run the event loop until done
+            if (!_priv->queue.empty ())
+                _priv->loop->run ();
         }
 
         void IOQueue::write (size_t offset, void *data, size_t size)
         {
             // perform isn't in action, so we need to start the chain
             bool need_perform = _priv->queue.empty () && _priv->handle;
-            _priv->queue.push_back (Private::Item (offset, data, size));
+            _priv->queue.push (Private::Item (offset, data, size));
             if (need_perform)
                 perform ();
         }
@@ -92,8 +97,11 @@ namespace Yatta
         void IOQueue::perform ()
         {
             // if it's empty, no point doing anything
-            if (_priv->queue.empty ())
+            if (_priv->queue.empty ()) {
+                if (_priv->loop->is_running ())
+                    _priv->loop->quit ();
                 return;
+            }
 
             // grab the first item and perform async work
             Private::Item &item = _priv->queue.front ();
@@ -114,10 +122,15 @@ namespace Yatta
             _priv->filename = filename;
         }
 
-        void IOQueue::create_file_finish (Glib::RefPtr<Gio::File> file,
+        void
+        IOQueue::create_file_finish (Glib::RefPtr<Gio::File> file,
                                      Glib::RefPtr<Gio::AsyncResult> &result)
         {
-            _priv->handle = file->create_file_finish (result);
+            try {
+                _priv->handle = file->create_file_finish (result);
+            } catch (Gio::Error &e) {
+                g_critical ("%s: %s", __PRETTY_FUNCTION__, e.what ().c_str ());
+            }
 
             // if perform was waiting, then start the chain
             if (!_priv->queue.empty ())
@@ -128,7 +141,7 @@ namespace Yatta
         {
             // we're handling this item now. delete it from queue
             operator delete (_priv->queue.front ().data);
-            _priv->queue.pop_front ();
+            _priv->queue.pop ();
 
             // grab result (and check for error), then start the next operation
             try {
@@ -136,7 +149,7 @@ namespace Yatta
                 perform ();
             } catch (Gio::Error &e)
             {
-                // TODO: Abort the download somehow
+                g_critical ("%s:%s", __PRETTY_FUNCTION__, e.what ().c_str ());
             }
         }
     };
