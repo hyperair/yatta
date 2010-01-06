@@ -43,10 +43,6 @@ namespace Yatta
             protected:
                 Manager ();
 
-                // internal remove_handle functions
-                void remove_handle (CURL *chunk);
-                void remove_handle (std::map <CURL*,Chunk*>::iterator iter);
-
                 // internal socket callback function for passing into libcurl
                 static int on_curl_socket (CURL *easy, // easy handle
                                       curl_socket_t s, // socket

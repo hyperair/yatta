@@ -111,21 +111,14 @@ namespace Yatta
         void Manager::remove_handle (Chunk *chunk)
         {
             CURL *handle = chunk->handle ();
-            remove_handle (handle);
-        }
-
-        void Manager::remove_handle (CURL *handle)
-        {
             chunkmap_t::iterator result =
                 _priv->chunkmap.find (handle);
-            if (result == _priv->chunkmap.end ()) return;
-            remove_handle (result);
-        }
 
-        void Manager::remove_handle (chunkmap_t::iterator iter)
-        {
-            Chunk *chunk = iter->second;
-            _priv->chunkmap.erase (iter);
+            if (result == _priv->chunkmap.end ())
+                return;
+
+            curl_multi_remove_handle (_priv->multihandle, handle);
+            _priv->chunkmap.erase (result);
             _priv->running_handles = _priv->chunkmap.size ();
         }
 
