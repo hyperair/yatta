@@ -81,7 +81,7 @@ namespace Yatta
         IOQueue::~IOQueue ()
         {
             // we must finish all writes first. run the event loop until done
-            if (!_priv->queue.empty ())
+            if (_priv->handle && !_priv->queue.empty ())
                 _priv->loop->run ();
         }
 
