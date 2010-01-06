@@ -246,7 +246,6 @@ namespace Yatta
                 return;
             }
 
-            g_debug ("resumable: %s", resumable () ? "true" : "false");
             // if not resumable, there can only be one chunk so do nothing
             if (!resumable ()) return;
 
