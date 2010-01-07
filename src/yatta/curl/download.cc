@@ -16,6 +16,7 @@
  */
 
 #include <queue>
+#include <limits>
 
 #include <sigc++/bind.h>
 #include <sigc++/hide.h>
@@ -37,7 +38,7 @@ namespace Yatta
                      const std::string &filename = "") :
                 url (url),
                 chunks (0),
-                max_chunks (10),
+                max_chunks (30),
                 resumable (false),
                 size (0),
                 running (false),
@@ -90,7 +91,7 @@ namespace Yatta
             if (_priv->chunks.empty ()) {
                 chunk_ptr_t chunk (new Chunk (*this, 0));
                 _priv->chunks.push_back (chunk);
-                connect_chunk_signals (chunk, _priv->chunks.begin ());
+                connect_chunk_signals (chunk);
                 chunk->start ();
                 return;
             } else if (!resumable () || size () == 0 || size () == -1)
@@ -119,20 +120,38 @@ namespace Yatta
             }
             // biggest_gaps.size () >= 1
 
-            // add new chunks
-            for (; !biggest_gaps.empty (); biggest_gaps.pop ()) {
-                // new offset is centrepoint of gap
-                size_t next_offset =
-                    biggest_gaps.front ().second == _priv->chunks.end () ?
-                    size () : (*biggest_gaps.front ().second)->tell ();
-                size_t new_chunk_offset = next_offset +
-                    biggest_gaps.front ().first / 2;
+            // calculate how many new chunks per gap we want
+            unsigned short chunks_per_gap = num_chunks / biggest_gaps.size ();
+            unsigned short remainder =
+                num_chunks - chunks_per_gap * biggest_gaps.size ();
 
-                // create and start chunk
+            // add new chunks
+            // add some chunks at the beginning first with the remainder
+            add_chunks (chunks_per_gap + remainder, biggest_gaps.front ().first,
+                        biggest_gaps.front ().second);
+            biggest_gaps.pop ();
+            for (; !biggest_gaps.empty (); biggest_gaps.pop ())
+                add_chunks (chunks_per_gap, biggest_gaps.front ().first,
+                            biggest_gaps.front ().second);
+        }
+
+        // add num_chunks for given gap size at iter location
+        void Download::add_chunks (unsigned short num_chunks,
+                                   size_t gap_size,
+                                   Download::chunk_list_t::iterator iter)
+        {
+            size_t new_chunk_offset = iter == _priv->chunks.end () ?
+                size () : (*iter)->offset ();
+            size_t size_per_chunk = gap_size / num_chunks;
+
+            for (unsigned short i = 0;
+                 i < num_chunks;
+                 ++i)
+            {
+                new_chunk_offset -= size_per_chunk;
                 chunk_ptr_t chunk (new Chunk (*this, new_chunk_offset));
-                connect_chunk_signals (chunk, _priv->chunks.insert (
-                                           biggest_gaps.front ().second,
-                                           chunk));
+                iter = _priv->chunks.insert (iter, chunk);
+                connect_chunk_signals (chunk);
                 chunk->start ();
             }
         }
@@ -141,8 +160,8 @@ namespace Yatta
         void Download::stop_chunks (unsigned short num_chunks)
         {
             for (chunk_list_t::reverse_iterator i = _priv->chunks.rbegin ();
-                 num_chunks > 0 && i != _priv->chunks.rend ();
-                 ++i)
+                 num_chunks && i != _priv->chunks.rend ();
+                 ++i, --num_chunks)
                 (*i)->stop ();
         }
 
@@ -284,14 +303,13 @@ namespace Yatta
                 stop_chunks (running_chunks - max_chunks);
         }
 
-        void Download::connect_chunk_signals (chunk_ptr_t chunk,
-                                              chunk_list_t::iterator iter)
+        void Download::connect_chunk_signals (chunk_ptr_t chunk)
         {
             // connect callbacks to signals, with chunk bound to them
             chunk->connect_signal_header (
                 sigc::bind<0> (
                     sigc::mem_fun (*this, &Download::on_chunk_header),
-                    chunk));
+                    chunk_wptr_t (chunk)));
             chunk->connect_signal_progress (
                 sigc::bind<0> (
                     sigc::hide (
@@ -299,12 +317,12 @@ namespace Yatta
                             sigc::mem_fun (
                                 *this,
                                 &Download::on_chunk_progress))),
-                    chunk));
+                    chunk_wptr_t (chunk)));
             chunk->connect_signal_write (
                 sigc::bind<0> (
                     sigc::mem_fun (*this,
                                    &Download::on_chunk_write),
-                    iter));
+                    chunk_wptr_t (chunk)));
 
             // hook up to the chunk's finish signal
             chunk->connect_signal_finished (
@@ -312,7 +330,7 @@ namespace Yatta
                     sigc::hide (
                         sigc::mem_fun (*this,
                                        &Download::on_chunk_finished)),
-                        chunk));
+                    chunk_wptr_t (chunk)));
 
             // if this is the first chunk, check if it's resumable
             if (chunk->offset () == 0) {
@@ -320,27 +338,25 @@ namespace Yatta
                     chunk->connect_signal_header (
                         sigc::hide (
                             sigc::hide (
-                                sigc::hide (
-                                    sigc::bind (
-                                        sigc::mem_fun (
-                                            *this,
-                                            &Download::chunk_check_resumable),
-                                        chunk)))));
-                _priv->get_size_connection = chunk->connect_signal_header (
-                    sigc::hide (
-                        sigc::hide (
-                            sigc::hide (
                                 sigc::bind (
                                     sigc::mem_fun (
                                         *this,
-                                        &Download::chunk_get_size),
-                                    chunk)))));
+                                        &Download::chunk_check_resumable),
+                                    chunk_wptr_t (chunk)))));
+                _priv->get_size_connection = chunk->connect_signal_header (
+                    sigc::hide (
+                        sigc::hide (
+                            sigc::bind (
+                                sigc::mem_fun (
+                                    *this,
+                                    &Download::chunk_get_size),
+                                chunk_wptr_t (chunk)))));
             }
         }
 
         // slots for interfacing with chunks
         void Download::on_chunk_header (chunk_wptr_t weak_chunk, void *data,
-                                        size_t size, size_t nmemb)
+                                        size_t bytes)
         {
             // TODO: if filename is empty, here's where we figure it out
         }
@@ -390,34 +406,46 @@ namespace Yatta
             // TODO: Add something here or get rid of it for good
         }
 
-        void Download::on_chunk_write (chunk_list_t::iterator iter,
+        void Download::on_chunk_write (chunk_wptr_t weak_chunk,
                                        void *data,
-                                       size_t size,
-                                       size_t nmemb)
+                                       size_t bytes)
         {
-            chunk_ptr_t chunk = *iter;
+            chunk_ptr_t chunk = weak_chunk.lock ();
             _priv->fileio.write (chunk->tell (),
                                  data,
-                                 size * nmemb);
-
-            g_assert (iter != _priv->chunks.end ());
-
-            // look at the next chunk and merge if necessary
-            if (++iter != _priv->chunks.end () &&
-                (*iter)->offset () <= chunk->tell ())
-            {
-                (*iter)->merge (*chunk);
-                (*iter)->start ();
-                _priv->chunks.erase (--iter);
-            }
+                                 bytes);
         }
 
         void Download::on_chunk_finished (Download::chunk_wptr_t weak_chunk)
         {
             chunk_ptr_t chunk = weak_chunk.lock ();
-            if (_priv->chunks.size () == 1 && size () == chunk->tell ()) {
-                _priv->signal_finished.emit ();
+
+            // check if it has finished prematurely. if it has, restart it.
+            if (chunk->downloaded () != chunk->total ()) {
+                chunk->start ();
+                return;
+            }
+
+            // check if download has completed
+            if (chunk->offset () == 0 && size () == chunk->tell ()) {
                 stop ();
+                _priv->signal_finished.emit ();
+            } else { // not done. search for next chunk and merge
+                chunk_list_t::iterator i;
+                for (i = _priv->chunks.begin ();
+                     i != _priv->chunks.end () && *i != chunk;
+                     ++i);
+
+                // we should only be called with a chunk that exists
+                g_assert (i != _priv->chunks.end ());
+
+                // merge with next chunk if need be
+                chunk_list_t::iterator next = i;
+                next++;
+                if (next != _priv->chunks.end ()) {
+                    (*next)->merge(*chunk);
+                    _priv->chunks.erase (i);
+                }
             }
         }
     };

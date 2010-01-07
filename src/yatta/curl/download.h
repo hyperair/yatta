@@ -34,73 +34,75 @@ namespace Yatta
 
         class Download : public sigc::trackable
         {
-            public:
-                Download (const Glib::ustring &url,
-                          const std::string &dirname,
-                          const std::string &filename = "");
-                virtual ~Download ();
+        public:
+            Download (const Glib::ustring &url,
+                      const std::string &dirname,
+                      const std::string &filename = "");
+            virtual ~Download ();
 
-                void start ();
-                void stop ();
+            void start ();
+            void stop ();
 
-                // accessors
-                unsigned short running_chunks () const;
-                unsigned short max_chunks () const;
-                void max_chunks (unsigned short max_chunks);
+            // accessors
+            unsigned short running_chunks () const;
+            unsigned short max_chunks () const;
+            void max_chunks (unsigned short max_chunks);
 
-                Glib::ustring url () const;
-                void url (const Glib::ustring &url);
+            Glib::ustring url () const;
+            void url (const Glib::ustring &url);
 
-                bool resumable() const;
-                bool running () const;
+            bool resumable() const;
+            bool running () const;
 
-                size_t size () const;
+            size_t size () const;
 
-                // signals
-                sigc::connection
-                    connect_signal_started (const sigc::slot<void> &slot);
-                sigc::connection
-                    connect_signal_stopped (const sigc::slot<void> &slot);
-                sigc::connection
-                    connect_signal_finished (const sigc::slot<void> &slot);
+            // signals
+            sigc::connection
+            connect_signal_started (const sigc::slot<void> &slot);
+            sigc::connection
+            connect_signal_stopped (const sigc::slot<void> &slot);
+            sigc::connection
+            connect_signal_finished (const sigc::slot<void> &slot);
 
-            private:
-                typedef std::tr1::shared_ptr<Chunk> chunk_ptr_t;
-                typedef std::tr1::weak_ptr<Chunk> chunk_wptr_t;
-                typedef std::list<chunk_ptr_t> chunk_list_t;
+        private:
+            typedef std::tr1::shared_ptr<Chunk> chunk_ptr_t;
+            typedef std::tr1::weak_ptr<Chunk> chunk_wptr_t;
+            typedef std::list<chunk_ptr_t> chunk_list_t;
 
-            protected:
-                // increase number of chunks by num_chunks
-                void add_chunks (unsigned short num_chunks);
+        protected:
+            // increase number of chunks by num_chunks
+            void add_chunks (unsigned short num_chunks);
 
-                // decrease number of running chunks by num_chunks
-                void stop_chunks (unsigned short num_chunks);
+            // add num_chunks chunks in front of iter
+            void add_chunks (unsigned short num_chunks,
+                             size_t gap_size,
+                             chunk_list_t::iterator iter_chunk);
 
-                void normalize_chunks ();
+            // decrease number of running chunks by num_chunks
+            void stop_chunks (unsigned short num_chunks);
 
-                void connect_chunk_signals (chunk_ptr_t chunk,
-                                            chunk_list_t::iterator iter);
+            void normalize_chunks ();
 
-                // use weak_ptr for the functions below to avoid circular
-                // dependencies preventing Chunk from destruction
-                virtual void on_chunk_header (chunk_wptr_t chunk,
-                                              void *data,
-                                              size_t size,
-                                              size_t nmemb);
-                virtual void on_chunk_progress (chunk_wptr_t chunk,
-                                                double dltotal,
-                                                double dlnow);
-                virtual void on_chunk_write (chunk_list_t::iterator chunk,
-                                             void *data,
-                                             size_t size,
-                                             size_t nmemb);
-                virtual void on_chunk_finished (chunk_wptr_t chunk);
-                void chunk_check_resumable (chunk_wptr_t chunk);
-                void chunk_get_size (chunk_wptr_t chunk);
+            void connect_chunk_signals (chunk_ptr_t chunk);
 
-            private:
-                struct Private;
-                std::tr1::shared_ptr<Private> _priv;
+            // use weak_ptr for the functions below to avoid circular
+            // dependencies preventing Chunk from destruction
+            virtual void on_chunk_header (chunk_wptr_t chunk,
+                                          void *data,
+                                          size_t bytes);
+            virtual void on_chunk_progress (chunk_wptr_t chunk,
+                                            double dltotal,
+                                            double dlnow);
+            virtual void on_chunk_write (chunk_wptr_t chunk,
+                                         void *data,
+                                         size_t bytes);
+            virtual void on_chunk_finished (chunk_wptr_t chunk);
+            void chunk_check_resumable (chunk_wptr_t chunk);
+            void chunk_get_size (chunk_wptr_t chunk);
+
+        private:
+            struct Private;
+            std::tr1::shared_ptr<Private> _priv;
         };
     };
 };

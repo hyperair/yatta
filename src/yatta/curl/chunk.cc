@@ -16,6 +16,9 @@
  */
 
 #include <sstream>
+#include <limits>
+#include <algorithm>
+
 #include <sigc++/signal.h>
 
 #include "chunk.h"
@@ -28,8 +31,7 @@ namespace Yatta
     {
         // typedefs
         typedef sigc::signal<void,
-                           void* /*data*/, size_t /*size*/,
-                           size_t /*nmemb*/>
+                             void* /*data*/, size_t /*bytes*/>
         signal_header_t;
         typedef sigc::signal<void,
                            double /*dltotal*/, double /*dlnow*/,
@@ -45,18 +47,23 @@ namespace Yatta
         struct Chunk::Private
         {
             // constructor
-            Private (Download &parent, size_t offset) :
+            Private (Download &parent, size_t offset, size_t total) :
                 handle (curl_easy_init ()),
                 parent (parent),
                 offset (offset),
                 downloaded (0),
-                total (0),
+                total (total),
                 running (false),
+                curl_callback_running (false),
+                cancelled (false),
                 signal_header (),
                 signal_progress (),
                 signal_write (),
                 signal_finished ()
-            {}
+            {
+                if (total == 0)
+                    this->total = std::numeric_limits<size_t>::max ();
+            }
 
             // data
             CURL     *handle;
@@ -65,6 +72,8 @@ namespace Yatta
             size_t    downloaded;
             size_t    total;
             bool      running;
+            bool      curl_callback_running;
+            bool      cancelled;
 
             // signals
             signal_header_t   signal_header;
@@ -76,8 +85,8 @@ namespace Yatta
         };
 
         // constructor
-        Chunk::Chunk (Download &parent, size_t offset) :
-            _priv (new Private (parent, offset))
+        Chunk::Chunk (Download &parent, size_t offset, size_t total) :
+            _priv (new Private (parent, offset, total))
         {
             // set some curl options...
             curl_easy_setopt (handle (), CURLOPT_URL,
@@ -112,8 +121,11 @@ namespace Yatta
         // destructor
         Chunk::~Chunk ()
         {
-            // if we're still running, stop and disconnect from Manager
-            if (_priv->running) stop();
+            // we're screwed if this happens
+            g_assert (!_priv->curl_callback_running);
+
+            stop ();
+            curl_easy_cleanup (handle ());
         }
 
         //member functions
@@ -128,6 +140,9 @@ namespace Yatta
         void Chunk::stop ()
         {
             if (!running ()) return;
+            if (_priv->curl_callback_running)
+                _priv->cancelled = true;
+
             Manager::get ()->remove_handle (this);
             _priv->running = false;
             _priv->signal_stopped.emit ();
@@ -135,24 +150,30 @@ namespace Yatta
 
         void Chunk::stop_finished (CURLcode result)
         {
+            long code;
+            curl_easy_getinfo (handle (), CURLINFO_RESPONSE_CODE, &code);
             _priv->signal_finished.emit (result);
             stop ();
         }
 
         void Chunk::merge (Chunk &previous_chunk)
         {
+            // stop the previous chunk
+            previous_chunk.stop ();
+
             g_assert (previous_chunk.tell () >= this->offset ());
 
             size_t new_offset = previous_chunk.offset ();
-            size_t downloaded = MAX (previous_chunk.tell (), tell());
+            size_t downloaded = std::max (previous_chunk.tell (), tell());
 
             // set new values for this chunk
-            offset (new_offset);
-            _priv->downloaded = downloaded;
+            _priv->offset = new_offset;
+            _priv->downloaded = downloaded - new_offset;
 
-            if (running ()) {
-                start ();
+            if (previous_chunk.running () || running ()) {
+                // TODO: Make sure CURL* is restarted properly here
                 stop ();
+                start ();
             }
         }
 
@@ -204,14 +225,19 @@ namespace Yatta
             return _priv->offset;
         }
 
-        void Chunk::offset (const size_t &arg)
-        {
-            _priv->offset = arg;
-        }
-
         size_t Chunk::downloaded () const
         {
             return _priv->downloaded;
+        }
+
+        size_t Chunk::total () const
+        {
+            return _priv->total;
+        }
+
+        void Chunk::total (size_t new_total)
+        {
+            _priv->total = new_total;
         }
 
         size_t Chunk::tell () const
@@ -231,7 +257,10 @@ namespace Yatta
         {
             Chunk *self = reinterpret_cast<Chunk*> (obj);
 
-            self->_priv->signal_header.emit (data, size, nmemb);
+            // guard against invalid curl behaviour
+            self->_priv->curl_callback_running = true;
+            self->_priv->signal_header.emit (data, size * nmemb);
+            self->_priv->curl_callback_running = false;
 
             return size * nmemb;
         }
@@ -242,11 +271,12 @@ namespace Yatta
         {
             Chunk *self = reinterpret_cast<Chunk*> (obj);
 
-            // we only update the total to download here, but not the downloaded
-            // bytes because it can skew what tell() says causing bytes to be
-            // written to the wrong location
-            self->_priv->total = dltotal;
+            if (self->_priv->cancelled)
+                return 1; // error
+
+            self->_priv->curl_callback_running = true;
             self->_priv->signal_progress.emit (dltotal, dlnow, ultotal, ulnow);
+            self->_priv->curl_callback_running = false;
 
             return 0;
         }
@@ -255,9 +285,21 @@ namespace Yatta
                                      size_t nmemb, void *obj)
         {
             Chunk *self = reinterpret_cast<Chunk*> (obj);
-            self->_priv->signal_write.emit (data, size, nmemb);
-            self->_priv->downloaded += size * nmemb;
-            return size * nmemb;
+
+            // we're stopped, so don't do anything
+            if (self->_priv->cancelled || self->downloaded () >= self->total ())
+                return 0;
+
+            size_t bytes_handled = std::min (self->total () -
+                                             self->downloaded (),
+                                             size * nmemb);
+
+            self->_priv->curl_callback_running = true;
+            self->_priv->signal_write.emit (data, bytes_handled);
+            self->_priv->downloaded += bytes_handled;
+            self->_priv->curl_callback_running = false;
+
+            return bytes_handled;
         }
     };
 };

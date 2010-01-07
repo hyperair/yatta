@@ -33,89 +33,91 @@ namespace Yatta
 
         class Chunk
         {
-            public:
-                // typedefs
-                typedef sigc::slot<void,
-                        void* /*data*/, size_t /*size*/,
-                        size_t /*nmemb*/> slot_header_t;
-                typedef sigc::slot<void,
-                    double /*dltotal*/, double /*dlnow*/,
-                    double /*ultotal*/, double /*ulnow*/> slot_progress_t;
-                typedef slot_header_t slot_write_t;
-                typedef sigc::slot<void> slot_started_t;
-                typedef slot_started_t slot_stopped_t;
-                typedef sigc::slot<void, CURLcode> slot_finished_t;
+        public:
+            // typedefs
+            typedef sigc::slot<void, void* /*data*/,
+                               size_t /*bytes*/> slot_header_t;
+            typedef sigc::slot<void, double /*dltotal*/, double /*dlnow*/,
+                               double /*ultotal*/,
+                               double /*ulnow*/> slot_progress_t;
+            typedef slot_header_t slot_write_t;
+            typedef sigc::slot<void> slot_started_t;
+            typedef slot_started_t slot_stopped_t;
+            typedef sigc::slot<void, CURLcode> slot_finished_t;
 
-                // constructors and destructors
-                explicit Chunk (Download &parent, size_t offset=0);
-                virtual  ~Chunk ();
+            // constructors and destructors
+            explicit Chunk (Download &parent, size_t offset, size_t total=0);
+            virtual  ~Chunk ();
 
-                // member functions
-                // start the chunk running
-                void start ();
-                // stop the chunk
-                void stop ();
+            // member functions
+            // start the chunk running
+            void start ();
+            // stop the chunk
+            void stop ();
 
-                // stop the chunk because it has finished (will emit
-                // signal_finished)
-                void stop_finished (CURLcode result);
+            // stop the chunk because it has finished (will emit
+            // signal_finished)
+            void stop_finished (CURLcode result);
 
-                // merge previous_chunk into this.
-                // precondition: previous_chunk.tell () >= this->offset ()
-                void merge (Chunk &previous_chunk);
+            // merge previous_chunk into this.
+            // precondition: previous_chunk.tell () >= this->offset ()
+            void merge (Chunk &previous_chunk);
 
-                // accessor functions
-                // signal when header is received
-                sigc::connection connect_signal_header (slot_header_t slot);
+            // accessor functions
+            // signal when header is received
+            sigc::connection connect_signal_header (slot_header_t slot);
 
-                // signal when libcurl calls progress function
-                sigc::connection connect_signal_progress (slot_progress_t slot);
+            // signal when libcurl calls progress function
+            sigc::connection connect_signal_progress (slot_progress_t slot);
 
-                // signal when there is stuff to write
-                sigc::connection connect_signal_write (slot_write_t slot);
+            // signal when there is stuff to write
+            sigc::connection connect_signal_write (slot_write_t slot);
 
-                // signal when chunk is added to the Manager
-                sigc::connection connect_signal_started (slot_started_t slot);
+            // signal when chunk is added to the Manager
+            sigc::connection connect_signal_started (slot_started_t slot);
 
-                // signal when chunk is stopped
-                sigc::connection connect_signal_stopped (slot_stopped_t slot);
+            // signal when chunk is stopped
+            sigc::connection connect_signal_stopped (slot_stopped_t slot);
 
-                // signal when chunk has finished (might have errors)
-                sigc::connection connect_signal_finished (slot_finished_t slot);
+            // signal when chunk has finished (might have errors)
+            sigc::connection connect_signal_finished (slot_finished_t slot);
 
-                // check if the chunk is running.
-                bool   running () const;
+            // check if the chunk is running.
+            bool   running () const;
 
-                // offset accessor (beginning of this chunk)
-                size_t offset () const;
-                void   offset (const size_t & arg);
+            // offset accessor (beginning of this chunk)
+            size_t offset () const;
 
-                // how many bytes in this chunk downloaded
-                size_t downloaded () const;
+            // how many bytes in this chunk downloaded
+            size_t downloaded () const;
 
-                // current position accessor (offset + downloaded)
-                size_t tell () const;
+            // how many bytes to download before this chunk should stop itself
+            void total (size_t total);
+            size_t total () const;
 
-                CURL * handle ();
+            // current position accessor (offset + downloaded)
+            size_t tell () const;
 
-            protected:
-                // static callbacks for CURL C library
-                // header function
-                static size_t on_curl_header (void *data, size_t size,
-                                               size_t nmemb, void *obj);
+            CURL * handle ();
 
-                // progress function
-                static size_t on_curl_progress (void *obj,
-                                                 double dltotal, double dlnow,
-                                                 double ultotal, double ulnow);
+        protected:
+            // static callbacks for CURL C library
+            // header function
+            static size_t on_curl_header (void *data, size_t size,
+                                          size_t nmemb, void *obj);
 
-                // write function
-                static size_t on_curl_write (void *data, size_t size,
-                                              size_t nmemb, void *obj);
+            // progress function
+            static size_t on_curl_progress (void *obj,
+                                            double dltotal, double dlnow,
+                                            double ultotal, double ulnow);
 
-            private:
-                struct Private;
-                std::tr1::shared_ptr<Private> _priv;
+            // write function
+            static size_t on_curl_write (void *data, size_t size,
+                                         size_t nmemb, void *obj);
+
+        private:
+            struct Private;
+            std::tr1::shared_ptr<Private> _priv;
         };
     };
 };

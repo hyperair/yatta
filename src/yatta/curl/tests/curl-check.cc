@@ -21,9 +21,9 @@ int main ()
     Glib::RefPtr<Yatta::Curl::Manager> mgr = Yatta::Curl::Manager::get ();
     mgr->attach ();
 
-    // Yatta::Curl::Download dl ("http://tw.releases.ubuntu.com/9.10/ubuntu-9.10-desktop-amd64.iso", "/tmp", "ubuntu.iso");
+    Yatta::Curl::Download dl ("http://tw.releases.ubuntu.com/9.10/ubuntu-9.10-desktop-amd64.iso", "/tmp", "ubuntu.iso");
     // Yatta::Curl::Download dl ("http://localhost/test.file", "/tmp", "test.file");
-    Yatta::Curl::Download dl ("http://www.ubuntu.com", "/tmp", "testing");
+    // Yatta::Curl::Download dl ("http://www.ubuntu.com", "/tmp", "testing");
     dl.start ();
     bla func (Glib::MainLoop::create ());
     dl.connect_signal_finished (sigc::slot<void> (func));
