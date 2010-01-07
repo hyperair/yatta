@@ -149,10 +149,17 @@ namespace Yatta
                  ++i)
             {
                 new_chunk_offset -= size_per_chunk;
-                chunk_ptr_t chunk (new Chunk (*this, new_chunk_offset));
+                chunk_ptr_t chunk (new Chunk (*this, new_chunk_offset,
+                                              size_per_chunk));
                 iter = _priv->chunks.insert (iter, chunk);
                 connect_chunk_signals (chunk);
                 chunk->start ();
+            }
+
+            // set the previous chunk's new total to be downloaded
+            if (iter != _priv->chunks.begin ()) {
+                iter--;
+                (*iter)->total (new_chunk_offset - (*iter)->offset ());
             }
         }
 
