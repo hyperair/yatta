@@ -427,16 +427,13 @@ namespace Yatta
         {
             chunk_ptr_t chunk = weak_chunk.lock ();
 
-            // check if it has finished prematurely. if it has, restart it.
-            if (chunk->downloaded () != chunk->total ()) {
-                chunk->start ();
-                return;
-            }
-
             // check if download has completed
             if (chunk->offset () == 0 && size () == chunk->tell ()) {
                 stop ();
                 _priv->signal_finished.emit ();
+            } else if (chunk->downloaded () < chunk->total ()) {
+                // if ended prematurely, restart chunk
+                chunk->start ();
             } else { // not done. search for next chunk and merge
                 chunk_list_t::iterator i;
                 for (i = _priv->chunks.begin ();
@@ -450,7 +447,7 @@ namespace Yatta
                 chunk_list_t::iterator next = i;
                 next++;
                 if (next != _priv->chunks.end ()) {
-                    (*next)->merge(*chunk);
+                    (*next)->merge (*chunk);
                     _priv->chunks.erase (i);
                 }
             }
