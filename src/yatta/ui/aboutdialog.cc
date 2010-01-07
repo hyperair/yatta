@@ -19,7 +19,7 @@
 #include <config.h>
 #endif
 
-#include "aboutdialog.h"
+#include "aboutdialog.hh"
 
 namespace Yatta
 {

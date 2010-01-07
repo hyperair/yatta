@@ -18,7 +18,7 @@
 #include <giomm.h>
 #include <queue>
 #include <cstring>
-#include "ioqueue.h"
+#include "ioqueue.hh"
 
 namespace Yatta
 {

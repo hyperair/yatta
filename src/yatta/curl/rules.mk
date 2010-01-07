@@ -3,10 +3,10 @@ yatta_SOURCES += \
 	src/yatta/curl/manager.cc \
 	src/yatta/curl/chunk.cc \
 	src/yatta/curl/ioqueue.cc \
-	src/yatta/curl/download.h \
-	src/yatta/curl/manager.h \
-	src/yatta/curl/chunk.h \
-	src/yatta/curl/ioqueue.h
+	src/yatta/curl/download.hh \
+	src/yatta/curl/manager.hh \
+	src/yatta/curl/chunk.hh \
+	src/yatta/curl/ioqueue.hh
 
 yatta_CXXFLAGS += \
 	$(CURL_CFLAGS)

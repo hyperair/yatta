@@ -1,7 +1,7 @@
 #include <glibmm.h>
 #include <giomm.h>
-#include "../manager.h"
-#include "../download.h"
+#include "../manager.hh"
+#include "../download.hh"
 
 struct bla
 {

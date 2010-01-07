@@ -20,9 +20,9 @@
 #include <gtkmm.h>
 #include <gtkmm/accelmap.h>
 
-#include "mainwindow.h"
-#include "main.h"
-#include "../options.h"
+#include "mainwindow.hh"
+#include "main.hh"
+#include "../options.hh"
 
 namespace Yatta
 {

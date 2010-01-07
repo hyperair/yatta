@@ -22,8 +22,8 @@
 
 #include <gtkmm/main.h>
 
-#include "mainwindow.h"
-#include "aboutdialog.h"
+#include "mainwindow.hh"
+#include "aboutdialog.hh"
 
 namespace Yatta
 {

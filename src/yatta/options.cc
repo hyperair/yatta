@@ -21,7 +21,7 @@
 #include <config.h>
 #endif
 
-#include "options.h"
+#include "options.hh"
 
 namespace Yatta
 {

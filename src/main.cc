@@ -25,9 +25,9 @@
 #include <config.h>
 #endif
 
-#include "yatta/options.h"
-#include "yatta/ui/main.h"
-#include "yatta/curl/manager.h"
+#include "yatta/options.hh"
+#include "yatta/ui/main.hh"
+#include "yatta/curl/manager.hh"
 
 int main (int argc, char **argv)
 {

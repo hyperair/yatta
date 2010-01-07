@@ -21,9 +21,9 @@
 
 #include <sigc++/signal.h>
 
-#include "chunk.h"
-#include "download.h"
-#include "manager.h"
+#include "chunk.hh"
+#include "download.hh"
+#include "manager.hh"
 
 namespace Yatta
 {

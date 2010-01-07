@@ -21,8 +21,8 @@
 
 #include <glibmm/dispatcher.h>
 
-#include "manager.h"
-#include "chunk.h"
+#include "manager.hh"
+#include "chunk.hh"
 
 namespace Yatta
 {

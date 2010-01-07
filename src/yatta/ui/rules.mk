@@ -6,9 +6,9 @@ yatta_SOURCES += \
 	src/yatta/ui/aboutdialog.cc
 
 EXTRA_DIST += \
-	src/yatta/ui/main.h \
-	src/yatta/ui/mainwindow.h \
-	src/yatta/ui/aboutdialog.h \
+	src/yatta/ui/main.hh \
+	src/yatta/ui/mainwindow.hh \
+	src/yatta/ui/aboutdialog.hh \
 	src/yatta/ui/mainwindow/main_menu.ui \
 	src/yatta/ui/mainwindow/main_tb.ui
 
@@ -21,7 +21,7 @@ src/yatta/ui/mainwindow/%.cc: src/yatta/ui/mainwindow/%.ui
 	sed -e '/<\!\[CDATA\[/,/\]\]>/d' "$<" | \
 	sed -e 's/"/\\"/g; s/^/"/; s/$$/"/; $$s/$$/;/;' \
 		-e '1i\
-\#include "../mainwindow.h" \
+\#include "../mainwindow.hh" \
 namespace Yatta { namespace UI { \
 const char *MainWindow::$(lastword $(subst /, , $(<:.ui=_uidata))) =' \
 		-e '$$a}\;}\;' > $@

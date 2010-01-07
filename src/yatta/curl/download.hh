@@ -23,7 +23,7 @@
 #include <glibmm/ustring.h>
 #include <glibmm/refptr.h>
 
-#include "chunk.h"
+#include "chunk.hh"
 
 namespace Yatta
 {

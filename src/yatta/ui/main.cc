@@ -17,10 +17,10 @@
 
 #include <gtkmm/main.h>
 
-#include "main.h"
-#include "mainwindow.h"
-#include "aboutdialog.h"
-#include "../options.h"
+#include "main.hh"
+#include "mainwindow.hh"
+#include "aboutdialog.hh"
+#include "../options.hh"
 
 namespace Yatta
 {

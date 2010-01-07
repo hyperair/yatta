@@ -23,9 +23,9 @@
 #include <sigc++/signal.h>
 #include <sigc++/connection.h>
 
-#include "download.h"
-#include "ioqueue.h"
-#include "manager.h"
+#include "download.hh"
+#include "ioqueue.hh"
+#include "manager.hh"
 
 namespace Yatta
 {
