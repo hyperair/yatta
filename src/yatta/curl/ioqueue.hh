@@ -20,6 +20,8 @@
 
 #include <tr1/memory>
 #include <string>
+
+#include <sigc++/slot.h>
 #include <glibmm/refptr.h>
 
 // some forward decls
@@ -27,6 +29,7 @@ namespace Gio
 {
     class File;
     class AsyncResult;
+    class Error;
 };
 
 namespace Yatta
@@ -35,23 +38,26 @@ namespace Yatta
     {
         class IOQueue
         {
-            public:
-                IOQueue (const std::string &dirname,
-                         const std::string &filename = "");
-                void write (size_t offset, void *data, size_t size);
-                void perform ();
-                void filename (const std::string &filename);
-                virtual ~IOQueue ();
+        public:
+            IOQueue (const std::string &dirname,
+                     const std::string &filename = "");
+            virtual ~IOQueue ();
 
-            protected:
-                void create_file_finish
-                    (Glib::RefPtr<Gio::File> gfile,
-                     Glib::RefPtr<Gio::AsyncResult> &result);
-                void perform_finish (Glib::RefPtr<Gio::AsyncResult> &result);
+            void write (size_t offset, void *data, size_t size);
+            void perform ();
+            void filename (const std::string &filename);
 
-            private:
-                struct Private;
-                std::tr1::shared_ptr<Private> _priv;
+            sigc::connection
+            connect_signal_error (sigc::slot<void, Gio::Error> slot);
+
+        protected:
+            void create_file_finish (Glib::RefPtr<Gio::File> gfile,
+                                     Glib::RefPtr<Gio::AsyncResult> &result);
+            void perform_finish (Glib::RefPtr<Gio::AsyncResult> &result);
+
+        private:
+            struct Private;
+            std::tr1::shared_ptr<Private> _priv;
         };
     };
 };

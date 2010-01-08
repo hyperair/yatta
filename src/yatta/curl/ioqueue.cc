@@ -32,7 +32,8 @@ namespace Yatta
                 filename (filename),
                 queue (),
                 handle (),
-                loop (Glib::MainLoop::create ())
+                loop (Glib::MainLoop::create ()),
+                signal_error ()
             {}
 
             struct Item
@@ -51,11 +52,12 @@ namespace Yatta
                 size_t size;
             };
 
-            std::string dirname;
-            std::string filename;
-            std::queue<Item> queue;
+            std::string                         dirname;
+            std::string                         filename;
+            std::queue<Item>                    queue;
             Glib::RefPtr<Gio::FileOutputStream> handle;
-            Glib::RefPtr<Glib::MainLoop> loop;
+            Glib::RefPtr<Glib::MainLoop>        loop;
+            sigc::signal<void, Gio::Error>      signal_error;
         };
 
         IOQueue::IOQueue (const std::string &dirname,
@@ -122,6 +124,12 @@ namespace Yatta
             _priv->filename = filename;
         }
 
+        sigc::connection
+        IOQueue::connect_signal_error (sigc::slot<void, Gio::Error> slot)
+        {
+            return _priv->signal_error.connect (slot);
+        }
+
         void
         IOQueue::create_file_finish (Glib::RefPtr<Gio::File> file,
                                      Glib::RefPtr<Gio::AsyncResult> &result)
@@ -129,7 +137,7 @@ namespace Yatta
             try {
                 _priv->handle = file->create_file_finish (result);
             } catch (Gio::Error &e) {
-                g_critical ("%s: %s", __PRETTY_FUNCTION__, e.what ().c_str ());
+                _priv->signal_error.emit (e);
             }
 
             // if perform was waiting, then start the chain
@@ -149,7 +157,7 @@ namespace Yatta
                 perform ();
             } catch (Gio::Error &e)
             {
-                g_critical ("%s:%s", __PRETTY_FUNCTION__, e.what ().c_str ());
+                _priv->signal_error.emit (e);
             }
         }
     };
