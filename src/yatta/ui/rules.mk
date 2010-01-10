@@ -18,7 +18,7 @@ CLEANFILES += \
 
 # embed .ui files into executable
 src/yatta/ui/mainwindow/%.cc: src/yatta/ui/mainwindow/%.ui
-	sed -e '/<\!\[CDATA\[/,/\]\]>/d' "$<" | \
+	@sed -e '/<\!\[CDATA\[/,/\]\]>/d' "$<" | \
 	sed -e 's/"/\\"/g; s/^/"/; s/$$/"/; $$s/$$/;/;' \
 		-e '1i\
 \#include "../mainwindow.hh" \
