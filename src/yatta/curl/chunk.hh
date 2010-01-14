@@ -99,6 +99,7 @@ namespace Yatta
             size_t tell () const;
 
             CURL * handle ();
+            const CURL * handle () const;
 
         protected:
             // static callbacks for CURL C library

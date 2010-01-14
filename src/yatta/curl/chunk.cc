@@ -48,7 +48,7 @@ namespace Yatta
         {
             // constructor
             Private (Download &parent, size_t offset, size_t total) :
-                handle (curl_easy_init ()),
+                handle (NULL),
                 parent (parent),
                 offset (offset),
                 downloaded (0),
@@ -88,19 +88,35 @@ namespace Yatta
         Chunk::Chunk (Download &parent, size_t offset, size_t total) :
             _priv (new Private (parent, offset, total))
         {
-            // set some curl options...
-            curl_easy_setopt (handle (), CURLOPT_URL,
-                              parent.url ().c_str ());
-            curl_easy_setopt (handle (), CURLOPT_RESUME_FROM, offset);
+        }
 
-            // hack to make libcurl pass the range anyway..
-            if (offset == 0) {
+        // destructor
+        Chunk::~Chunk ()
+        {
+            // we're screwed if this happens
+            g_assert (!_priv->curl_callback_running);
+
+            stop ();
+        }
+
+        //member functions
+        void Chunk::start ()
+        {
+            if (running ()) return;
+
+            // create chunk
+            _priv->handle = curl_easy_init ();
+            curl_easy_setopt (handle (), CURLOPT_URL,
+                              _priv->parent.url ().c_str ());
+            curl_easy_setopt (handle (), CURLOPT_RESUME_FROM, tell ());
+
+            // hack to tel libcurl to pass the range anyway to induce a 206
+            if (tell () == 0) {
                 struct curl_slist *headers = NULL;
                 std::ostringstream ss;
-                ss << "Range: bytes=" << offset << "-";
-                headers = curl_slist_append (
-                    headers,
-                    ss.str ().c_str ());
+                ss << "Range: bytes=" << tell () << "-";
+                headers = curl_slist_append (headers,
+                                             ss.str ().c_str ());
                 curl_easy_setopt (handle (), CURLOPT_HTTPHEADER, headers);
             }
 
@@ -116,36 +132,29 @@ namespace Yatta
                               &on_curl_progress);
             curl_easy_setopt (handle (), CURLOPT_HEADERFUNCTION,
                               &on_curl_header);
-        }
 
-        // destructor
-        Chunk::~Chunk ()
-        {
-            // we're screwed if this happens
-            g_assert (!_priv->curl_callback_running);
 
-            stop ();
-            curl_easy_cleanup (handle ());
-        }
-
-        //member functions
-        void Chunk::start ()
-        {
-            if (running ()) return;
             Manager::get ()->add_handle (this);
-            _priv->running = true;
             _priv->signal_started.emit ();
         }
 
         void Chunk::stop ()
         {
             if (!running ()) return;
-            if (_priv->curl_callback_running)
+
+            // we're in the middle of a callback, so set cancelled, and wait for
+            // curl to get rid of us. then stop_finished will be called which
+            // will call us again
+            if (_priv->curl_callback_running) {
                 _priv->cancelled = true;
+                return;
+            }
 
             Manager::get ()->remove_handle (this);
-            _priv->running = false;
             _priv->signal_stopped.emit ();
+            curl_easy_cleanup (_priv->handle);
+            _priv->handle = NULL;
+            _priv->cancelled = false;
         }
 
         void Chunk::stop_finished (CURLcode result)
@@ -219,7 +228,7 @@ namespace Yatta
         // I/O status accessors
         bool Chunk::running () const
         {
-            return _priv->running;
+            return !_priv->cancelled && handle ();
         }
 
         size_t Chunk::offset() const
@@ -249,6 +258,11 @@ namespace Yatta
 
         // other accessors
         CURL *Chunk::handle ()
+        {
+            return _priv->handle;
+        }
+
+        const CURL *Chunk::handle () const
         {
             return _priv->handle;
         }
