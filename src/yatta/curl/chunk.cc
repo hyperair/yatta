@@ -164,11 +164,13 @@ namespace Yatta
             g_assert (previous_chunk.tell () >= this->offset ());
 
             size_t new_offset = previous_chunk.offset ();
-            size_t downloaded = std::max (previous_chunk.tell (), tell());
+            size_t cur_pos = std::max (previous_chunk.tell (), tell());
+            size_t end_pos = offset () + total ();
 
             // set new values for this chunk
             _priv->offset = new_offset;
-            _priv->downloaded = downloaded - new_offset;
+            _priv->downloaded = cur_pos - new_offset;
+            _priv->total = end_pos - new_offset;
 
             if (previous_chunk.running () || running ()) {
                 // TODO: Make sure CURL* is restarted properly here
