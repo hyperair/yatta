@@ -161,8 +161,8 @@ namespace Yatta
         {
             long code;
             curl_easy_getinfo (handle (), CURLINFO_RESPONSE_CODE, &code);
-            _priv->signal_finished.emit (result);
             stop ();
+            _priv->signal_finished.emit (result);
         }
 
         void Chunk::merge (Chunk &previous_chunk)
