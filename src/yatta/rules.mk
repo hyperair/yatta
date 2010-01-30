@@ -1,7 +1,5 @@
 yatta_SOURCES += \
-	src/yatta/options.cc
-
-EXTRA_DIST += \
+	src/yatta/options.cc \
 	src/yatta/options.hh
 
 yatta_CXXFLAGS += \
