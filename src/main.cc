@@ -48,9 +48,6 @@ int main (int argc, char **argv)
 
         // run main loop
         ui_kit.run ();
-
-        // cleanup after that
-        Yatta::Curl::Manager::get ()->destroy ();
     } catch (std::exception &e) {
         std::cerr << e.what () << std::endl;
     } catch (Glib::Exception &e) {
