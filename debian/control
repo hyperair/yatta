@@ -6,6 +6,8 @@ Build-Depends: debhelper (>= 7.0.50),
                libgtkmm-2.4-dev,
                libcurl4-gnutls-dev,
                autotools-dev,
+               autoconf,
+               automake,
                pkg-config,
                intltool
 Standards-Version: 3.8.4
