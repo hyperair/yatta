@@ -1,0 +1,18 @@
+Source: yatta
+Section: net
+Priority: optional
+Maintainer: Chow Loong Jin <hyperair@ubuntu.com>
+Build-Depends: debhelper (>= 7.0.50),
+               libgtkmm-2.4-dev,
+               libcurl4-gnutls-dev,
+               autotools-dev,
+               pkg-config,
+               intltool
+Standards-Version: 3.8.4
+Homepage: http://www.gitorious.org/yatta
+
+Package: yatta
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Gtk+ download accelerator
+ Your downloads go ZOOM, and you go Yatta!
