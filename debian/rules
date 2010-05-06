@@ -2,6 +2,7 @@
 
 override_dh_auto_configure:
 	autoreconf -vfi
+	intltoolize -c --force
 	dh_auto_configure
 %:
 	dh --parallel $@
