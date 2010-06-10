@@ -7,6 +7,7 @@ AM_INIT_AUTOMAKE([-Wall foreign dist-bzip2 tar-ustar subdir-objects])
 
 dnl silent rules
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+AM_MAINTAINER_MODE([enable])
 
 AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_HEADERS([config.h])
