@@ -113,10 +113,8 @@ namespace Yatta
             // hack to tel libcurl to pass the range anyway to induce a 206
             if (tell () == 0) {
                 struct curl_slist *headers = NULL;
-                std::ostringstream ss;
-                ss << "Range: bytes=" << tell () << "-";
                 headers = curl_slist_append (headers,
-                                             ss.str ().c_str ());
+                                             "Range: bytes=0-");
                 curl_easy_setopt (handle (), CURLOPT_HTTPHEADER, headers);
             }
 
