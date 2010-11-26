@@ -50,11 +50,6 @@ add_executable (yatta
   src/yatta/ui/mainwindow/main_tb.cc
 )
 
-set_property (
-  SOURCE src/yatta/ui/mainwindow/main_tb.cc src/yatta/ui/mainwindow/main_menu.cc
-  PROPERTY GENERATED ON
-)
-
 target_link_libraries (yatta ${CURL_LIBRARIES} ${GTKMM_LIBRARIES})
 include_directories (${GTKMM_INCLUDE_DIRS} ${LIBXMLPP_INCLUDE_DIRS})
 
