@@ -1,11 +1,33 @@
 cmake_minimum_required (VERSION 2.6)
 project (Yatta)
 
+include (CPack)
 find_package (PkgConfig REQUIRED)
 find_package (CURL REQUIRED)
 
-pkg_check_modules(GTKMM gtkmm-2.4)
+pkg_check_modules (GTKMM gtkmm-2.4)
+pkg_check_modules (LIBXMLPP libxml++-2.6)
 
+# embedding ui files into cc files
+add_executable (src/yatta/ui/convert_ui src/yatta/ui/convert_ui.cc)
+target_link_libraries (src/yatta/ui/convert_ui ${LIBXMLPP_LIBRARIES})
+
+set (uimgrdir src/yatta/ui/mainwindow/)
+file (GLOB ui_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/yatta/ui/mainwindow/*.ui)
+
+foreach (ui_file ${ui_files})
+  get_filename_component (filename ${ui_file} NAME_WE)
+  set (ui_file ${CMAKE_CURRENT_BINARY_DIR}/${uimgrdir}/${filename}.ui)
+  set (cc_file ${CMAKE_CURRENT_BINARY_DIR}/${uimgrdir}/${filename}.cc)
+  add_custom_command (
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/src/yatta/ui/mainwindow/${filename}.cc
+    MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/src/yatta/ui/mainwindow/${filename}.ui
+    DEPENDS src/yatta/ui/convert_ui
+    COMMAND src/yatta/ui/convert_ui $< $@ Yatta::UI::MainWindow::${filename}_uidata
+  )
+endforeach (ui_file)
+
+# begin actual yatta stuff
 add_executable (yatta
   src/main.cc
   src/yatta/curl/chunk.cc
@@ -28,8 +50,13 @@ add_executable (yatta
   src/yatta/ui/mainwindow/main_tb.cc
 )
 
+set_property (
+  SOURCE src/yatta/ui/mainwindow/main_tb.cc src/yatta/ui/mainwindow/main_menu.cc
+  PROPERTY GENERATED ON
+)
+
 target_link_libraries (yatta ${CURL_LIBRARIES} ${GTKMM_LIBRARIES})
-include_directories (${GTKMM_INCLUDE_DIRS} ${GTKMM_CFLAGS})
+include_directories (${GTKMM_INCLUDE_DIRS} ${LIBXMLPP_INCLUDE_DIRS})
 
 set (GETTEXT_PACKAGE yatta)
 set (PROGRAMNAME_LOCALEDIR ${datadir}/locale)
@@ -37,4 +64,10 @@ set (PROGRAMNAME_LOCALEDIR ${datadir}/locale)
 set_target_properties (yatta PROPERTIES
   COMPILE_FLAGS
   "-DGETTEXT_PACKAGE=\\\"${GETTEXT_PACKAGE}\\\" -DPROGRAMNAME_LOCALEDIR=\\\"${PROGRAMNAME_LOCALEDIR}\\\" -DVERSION=\\\"\\\""
+)
+
+add_custom_target (run
+  DEPENDS yatta
+  COMMAND ./yatta
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
