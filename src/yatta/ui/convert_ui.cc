@@ -3,12 +3,20 @@
 #include <iostream>
 #include <locale>
 
-Glib::ustring replace_newline (Glib::ustring str)
+Glib::ustring escape_string (Glib::ustring str)
 {
-    size_t pos;
-    while ((pos = str.find ('\n')) != Glib::ustring::npos) {
+    size_t pos = 0;
+    while ((pos = str.find ('\n', pos)) != Glib::ustring::npos) {
         str.erase (pos, 1);
         str.insert (pos, "\\n");
+        pos += 2;
+    }
+
+    pos = 0;
+    while ((pos = str.find ('"', pos+2)) != Glib::ustring::npos) {
+        str.erase (pos, 1);
+        str.insert (pos, "\\\"");
+        pos += 2;
     }
 
     return str;
@@ -30,16 +38,16 @@ main (int argc, char **argv)
 
     // preamble
     outfile << "#include \"../mainwindow.hh\"" << std::endl
-            << "namespace Yatta { namespace UI {" << std::endl
             << "const char *" << argv[3] << " = \"";
 
     while (reader.read ()) {
         if (reader.get_name () == "ui") {
-            outfile << replace_newline (reader.read_outer_xml ()) << std::endl;
+            outfile << escape_string (reader.read_outer_xml ());
+            break;
         }
     }
 
-    outfile << '"' << std::endl;
+    outfile << "\";" << std::endl;
 
     return 0;
 }
