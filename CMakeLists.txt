@@ -10,20 +10,26 @@ pkg_check_modules (LIBXMLPP libxml++-2.6)
 
 # embedding ui files into cc files
 add_executable (src/yatta/ui/convert_ui src/yatta/ui/convert_ui.cc)
+file (MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/src/yatta/ui/mainwindow/)
 target_link_libraries (src/yatta/ui/convert_ui ${LIBXMLPP_LIBRARIES})
 
-set (uimgrdir src/yatta/ui/mainwindow/)
+set (uimgrdir src/yatta/ui/mainwindow)
 file (GLOB ui_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} src/yatta/ui/mainwindow/*.ui)
 
 foreach (ui_file ${ui_files})
   get_filename_component (filename ${ui_file} NAME_WE)
-  set (ui_file ${CMAKE_CURRENT_BINARY_DIR}/${uimgrdir}/${filename}.ui)
+  set (ui_file ${CMAKE_CURRENT_SOURCE_DIR}/${uimgrdir}/${filename}.ui)
   set (cc_file ${CMAKE_CURRENT_BINARY_DIR}/${uimgrdir}/${filename}.cc)
+
   add_custom_command (
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/src/yatta/ui/mainwindow/${filename}.cc
-    MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/src/yatta/ui/mainwindow/${filename}.ui
-    DEPENDS src/yatta/ui/convert_ui
-    COMMAND src/yatta/ui/convert_ui $< $@ Yatta::UI::MainWindow::${filename}_uidata
+    OUTPUT ${cc_file}
+    MAIN_DEPENDENCY ${ui_file}
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/src/yatta/ui/convert_ui
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/src/yatta/ui/convert_ui
+            ${ui_file} ${cc_file} Yatta::UI::MainWindow::${filename}_uidata
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/yatta/ui/mainwindow.hh
+            ${CMAKE_CURRENT_BINARY_DIR}/src/yatta/ui/mainwindow.hh
   )
 endforeach (ui_file)
 
