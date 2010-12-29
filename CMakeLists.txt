@@ -8,6 +8,9 @@ find_package (CURL REQUIRED)
 pkg_check_modules (GTKMM gtkmm-2.4)
 pkg_check_modules (LIBXMLPP libxml++-2.6)
 
+# configure paths
+set (bindir ${CMAKE_INSTALL_PREFIX}/bin)
+
 # embedding ui files into cc files
 add_executable (src/yatta/ui/convert_ui src/yatta/ui/convert_ui.cc)
 file (MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/src/yatta/ui/mainwindow/)
@@ -67,6 +70,7 @@ set_target_properties (yatta PROPERTIES
   "-DGETTEXT_PACKAGE=\\\"${GETTEXT_PACKAGE}\\\" -DPROGRAMNAME_LOCALEDIR=\\\"${PROGRAMNAME_LOCALEDIR}\\\" -DVERSION=\\\"\\\""
 )
 
+install (PROGRAMS yatta DESTINATION ${bindir})
 add_custom_target (run
   DEPENDS yatta
   COMMAND ./yatta
