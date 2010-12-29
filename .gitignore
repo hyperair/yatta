@@ -31,3 +31,8 @@ BROWSE
 semantic.cache
 yatta-*.tar.*
 curl-check
+src/yatta/ui/convert_ui
+CMakeCache.txt
+CMakeFiles/
+CPack*.cmake
+cmake_install.cmake
