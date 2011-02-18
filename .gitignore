@@ -31,3 +31,4 @@ BROWSE
 semantic.cache
 yatta-*.tar.*
 curl-check
+/convert-ui

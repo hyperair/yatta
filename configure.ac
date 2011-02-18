@@ -31,6 +31,7 @@ dnl end i18n bits
 dnl program dependencies
 PKG_CHECK_MODULES([GTKMM], [gtkmm-2.4])
 PKG_CHECK_MODULES([CURL], [libcurl])
+PKG_CHECK_MODULES([LIBXML], [libxml++-2.6])
 
 AC_CONFIG_FILES([
     Makefile

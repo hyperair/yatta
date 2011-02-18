@@ -16,12 +16,11 @@ CLEANFILES += \
 	src/yatta/ui/mainwindow/main_menu.cc \
 	src/yatta/ui/mainwindow/main_tb.cc
 
+noinst_PROGRAMS = convert-ui
+convert_ui_SOURCES = src/yatta/ui/convert_ui.cc
+convert_ui_CXXFLAGS = $(LIBXML_CFLAGS)
+convert_ui_LDFLAGS = $(LIBXML_LIBS)
+
 # embed .ui files into executable
-src/yatta/ui/mainwindow/%.cc: src/yatta/ui/mainwindow/%.ui
-	@sed -e '/<\!\[CDATA\[/,/\]\]>/d' "$<" | \
-	sed -e 's/"/\\"/g; s/^/"/; s/$$/"/; $$s/$$/;/;' \
-		-e '1i\
-\#include "../mainwindow.hh" \
-namespace Yatta { namespace UI { \
-const char *MainWindow::$(lastword $(subst /, , $(<:.ui=_uidata))) =' \
-		-e '$$a}\;}\;' > $@
+src/yatta/ui/mainwindow/%.cc: src/yatta/ui/mainwindow/%.ui convert-ui
+	@echo GEN $@ && "$(top_builddir)/convert-ui" $< $@ Yatta::UI::MainWindow::$(lastword $(subst /, , $(<:.ui=_uidata)))
