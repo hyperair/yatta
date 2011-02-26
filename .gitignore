@@ -16,9 +16,9 @@ ChangeLog
 INSTALL
 README
 Makefile
-*.o
-yatta
-!src/yatta
+*.*o
+/yatta
+/libyatta.la
 .dirstamp
 TAGS
 tags
@@ -32,3 +32,6 @@ semantic.cache
 yatta-*.tar.*
 curl-check
 /convert-ui
+/ltmain.sh
+/libtool
+.libs
