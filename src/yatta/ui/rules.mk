@@ -1,4 +1,4 @@
-yatta_SOURCES += \
+libyatta_la_SOURCES += \
 	src/yatta/ui/main.cc \
 	src/yatta/ui/main.hh \
 	src/yatta/ui/mainwindow.cc \

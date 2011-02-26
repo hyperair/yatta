@@ -1,4 +1,5 @@
 bin_PROGRAMS =
+noinst_LTLIBRARIES =
 check_PROGRAMS =
 TESTS =
 EXTRA_DIST =

@@ -1,4 +1,4 @@
-yatta_SOURCES += \
+libyatta_la_SOURCES += \
 	src/yatta/curl/download.cc \
 	src/yatta/curl/manager.cc \
 	src/yatta/curl/chunk.cc \
@@ -6,10 +6,10 @@ yatta_SOURCES += \
 	src/yatta/curl/manager.hh \
 	src/yatta/curl/chunk.hh
 
-yatta_CXXFLAGS += \
+libyatta_la_CXXFLAGS += \
 	$(CURL_CFLAGS)
 
-yatta_LDADD += \
+libyatta_la_LIBADD += \
 	$(CURL_LIBS)
 
 include src/yatta/curl/tests/rules.mk

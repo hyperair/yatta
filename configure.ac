@@ -13,7 +13,7 @@ AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_HEADERS([config.h])
 
 AC_PROG_CXX
-AC_LANG([C++])
+AC_PROG_LIBTOOL
 
 dnl i18n bits
 IT_PROG_INTLTOOL([0.35.0])
