@@ -42,11 +42,12 @@ namespace Yatta
 
         void About::on_response (int response_id)
         {
+            (void) response_id; // avoid warning about unused param
             hide ();
         }
 
         About::~About ()
         {
         }
-    };
-};
+    }
+}

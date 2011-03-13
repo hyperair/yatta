@@ -189,5 +189,5 @@ namespace Yatta
         {
             Gtk::Main::quit ();
         }
-    };
-};
+    }
+}

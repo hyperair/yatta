@@ -60,7 +60,7 @@ namespace Yatta
                 static const char *main_menu_uidata;
                 static const char *main_tb_uidata;
         };
-    };
-};
+    }
+}
 
 #endif // YATTA_UI_MAINWINDOW_H

@@ -160,5 +160,5 @@ namespace Yatta
                 _priv->signal_error.emit (e);
             }
         }
-    };
-};
+    }
+}

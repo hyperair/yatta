@@ -57,8 +57,8 @@ namespace Yatta
         Glib::RefPtr<Manager> Manager::Private::instance;
 
         Manager::Manager () :
-            _priv (new Private()),
-            Glib::Source ()
+            Glib::Source (),
+            _priv (new Private())
         {
             // must initialize curl globally first!
             curl_global_init (CURL_GLOBAL_ALL);
@@ -75,9 +75,8 @@ namespace Yatta
             set_can_recurse (true);
 
             // this is to prevent glibmm from segfaulting
-            connect_generic (
-                sigc::slot<bool, sigc::slot_base *> (
-                    sigc::mem_fun (*this, &Manager::dispatch)));
+            connect_generic (sigc::slot<bool, sigc::slot_base *>
+                             (sigc::mem_fun (*this, &Manager::dispatch)));
         }
 
         Glib::RefPtr<Manager> Manager::get ()
@@ -128,6 +127,8 @@ namespace Yatta
                    void *userp,
                    void *socketp)
         {
+            (void) easy;        // avoid warning about unused params
+            (void) socketp;
             Manager *self = static_cast<Manager *> (userp);
 
             pollmap_t::iterator result = self->_priv->pollmap.find (s);
@@ -203,6 +204,8 @@ namespace Yatta
 
         bool Manager::dispatch (sigc::slot_base *slot)
         {
+            (void) slot;        // dummy value from connect_generic
+
             // copy the current running handles over
             int running_handles = _priv->running_handles;
 
@@ -240,7 +243,7 @@ namespace Yatta
             // cleanup finished handles/chunks
             int msgs;
             CURLMsg *msg = 0;
-            while (msg = curl_multi_info_read (_priv->multihandle, &msgs))
+            while ((msg = curl_multi_info_read (_priv->multihandle, &msgs)))
             {
                 CURL *handle = msg->easy_handle;
                 CURLcode result = msg->data.result;
@@ -259,5 +262,5 @@ namespace Yatta
 
             return true;
         }
-    };
-};
+    }
+}

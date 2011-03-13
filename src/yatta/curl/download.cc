@@ -94,7 +94,7 @@ namespace Yatta
                 connect_chunk_signals (chunk);
                 chunk->start ();
                 return;
-            } else if (!resumable () || size () == 0 || size () == -1)
+            } else if (!resumable () || size () == 0)
                 // if !resumable, no point adding
                 return;
 
@@ -452,5 +452,5 @@ namespace Yatta
                 }
             }
         }
-    };
-};
+    }
+}

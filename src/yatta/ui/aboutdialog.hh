@@ -32,7 +32,7 @@ namespace Yatta
                 virtual void on_response (int response_id);
                 virtual ~About ();
         };
-    };
-};
+    }
+}
 
 #endif // YATTA_UI_ABOUTWINDOW_H

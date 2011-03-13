@@ -30,7 +30,7 @@ namespace Gio
     class File;
     class AsyncResult;
     class Error;
-};
+}
 
 namespace Yatta
 {
@@ -59,7 +59,7 @@ namespace Yatta
             struct Private;
             std::tr1::shared_ptr<Private> _priv;
         };
-    };
-};
+    }
+}
 
 #endif // YATTA_CURL_IOQUEUE_H

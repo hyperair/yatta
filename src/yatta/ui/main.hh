@@ -71,7 +71,7 @@ namespace Yatta
                 struct Priv;
                 std::tr1::shared_ptr<Priv> _priv;
         };
-    };
-};
+    }
+}
 
 #endif // YATTA_UI_MAIN_H

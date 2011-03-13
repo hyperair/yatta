@@ -59,6 +59,6 @@ namespace Yatta
                 struct Private;
                 std::tr1::shared_ptr<Private> _priv;
         };
-    };
-};
+    }
+}
 #endif // YATTA_CURL_MANAGER_H

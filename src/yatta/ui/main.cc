@@ -63,5 +63,5 @@ namespace Yatta
         Main::~Main ()
         {
         }
-    };
-};
+    }
+}

@@ -317,5 +317,5 @@ namespace Yatta
 
             return bytes_handled;
         }
-    };
-};
+    }
+}
