@@ -7,6 +7,7 @@ libyatta_la_SOURCES =
 
 AM_CXXFLAGS = \
 	-D PROGRAMNAME_LOCALEDIR=\""$(PROGRAMNAME_LOCALEDIR)"\" \
+	-Wall -Wextra -pedantic \
 	$(GTKMM_CFLAGS)
 
 yatta_CXXFLAGS = $(AM_CXXFLAGS)
