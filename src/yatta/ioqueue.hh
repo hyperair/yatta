@@ -34,32 +34,28 @@ namespace Gio
 
 namespace Yatta
 {
-    namespace Curl
+    class IOQueue
     {
-        class IOQueue
-        {
-        public:
-            IOQueue (const std::string &dirname,
-                     const std::string &filename = "");
-            virtual ~IOQueue ();
+    public:
+        IOQueue (const std::string &dirname,
+                 const std::string &filename = "");
+        virtual ~IOQueue ();
 
-            void write (size_t offset, void *data, size_t size);
-            void perform ();
-            void filename (const std::string &filename);
+        void write (size_t offset, void *data, size_t size);
+        void perform ();
+        void filename (const std::string &filename);
 
-            sigc::connection
-            connect_signal_error (sigc::slot<void, Gio::Error> slot);
+        sigc::connection
+        connect_signal_error (sigc::slot<void, Gio::Error> slot);
 
-        protected:
-            void create_file_finish (Glib::RefPtr<Gio::File> gfile,
-                                     Glib::RefPtr<Gio::AsyncResult> &result);
-            void perform_finish (Glib::RefPtr<Gio::AsyncResult> &result);
+    protected:
+        void create_file_finish (Glib::RefPtr<Gio::File> gfile,
+                                 Glib::RefPtr<Gio::AsyncResult> &result);
+        void perform_finish (Glib::RefPtr<Gio::AsyncResult> &result);
 
-        private:
-            struct Private;
-            std::tr1::shared_ptr<Private> _priv;
-        };
-    }
+    private:
+        struct Private;
+        std::tr1::shared_ptr<Private> _priv;
+    };
 }
-
 #endif // YATTA_CURL_IOQUEUE_H

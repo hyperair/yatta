@@ -1,8 +1,6 @@
 libyatta_la_SOURCES += \
-	src/yatta/curl/download.cc \
 	src/yatta/curl/manager.cc \
 	src/yatta/curl/chunk.cc \
-	src/yatta/curl/download.hh \
 	src/yatta/curl/manager.hh \
 	src/yatta/curl/chunk.hh
 
