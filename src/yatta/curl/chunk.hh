@@ -24,13 +24,12 @@
 #include <sigc++/slot.h>
 #include <sigc++/connection.h>
 
+#include "../download.hh"
+
 namespace Yatta
 {
     namespace Curl
     {
-        // forward declaration
-        class Download;
-
         class Chunk
         {
         public:
@@ -46,7 +45,7 @@ namespace Yatta
             typedef sigc::slot<void, CURLcode> slot_finished_t;
 
             // constructors and destructors
-            explicit Chunk (Download &parent, size_t offset, size_t total=0);
+            Chunk (Download &parent, size_t offset, size_t total=0);
             virtual  ~Chunk ();
 
             // member functions

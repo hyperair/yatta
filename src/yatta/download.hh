@@ -23,11 +23,10 @@
 #include <glibmm/ustring.h>
 #include <glibmm/refptr.h>
 
-#include "curl/chunk.hh"
-#include "curl/manager.hh"
-
 namespace Yatta
 {
+    namespace Curl { class Chunk; } // FIXME: abstract Chunk away so we don't
+    typedef Curl::Chunk Chunk;      // have to resort to this hack
     class Download : public sigc::trackable
     {
     public:

@@ -24,13 +24,7 @@
 #include <sigc++/slot.h>
 #include <glibmm/refptr.h>
 
-// some forward decls
-namespace Gio
-{
-    class File;
-    class AsyncResult;
-    class Error;
-}
+#include <giomm.h>
 
 namespace Yatta
 {

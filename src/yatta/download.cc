@@ -26,6 +26,7 @@
 #include "download.hh"
 #include "ioqueue.hh"
 #include "curl/manager.hh"
+#include "curl/chunk.hh"
 
 namespace Yatta
 {
