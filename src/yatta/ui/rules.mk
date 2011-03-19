@@ -23,4 +23,5 @@ convert_ui_LDFLAGS = $(LIBXML_LIBS)
 
 # embed .ui files into executable
 src/yatta/ui/mainwindow/%.cc: src/yatta/ui/mainwindow/%.ui convert-ui
-	@echo GEN $@ && "$(top_builddir)/convert-ui" $< $@ Yatta::UI::MainWindow::$(lastword $(subst /, , $(<:.ui=_uidata)))
+	$(AM_V_GEN)"$(top_builddir)/convert-ui" $< $@ \
+		Yatta::UI::MainWindow::$(lastword $(subst /, , $(<:.ui=_uidata)))
