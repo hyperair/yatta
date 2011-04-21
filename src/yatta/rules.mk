@@ -4,7 +4,9 @@ libyatta_la_SOURCES += \
 	src/yatta/ioqueue.cc \
 	src/yatta/ioqueue.hh \
 	src/yatta/download.cc \
-	src/yatta/download.hh
+	src/yatta/download.hh \
+	src/yatta/chunk.cc \
+	src/yatta/chunk.hh
 
 AM_CXXFLAGS += \
 	-DDATADIR=\""$(pkgdatadir)"\"
