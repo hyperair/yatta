@@ -31,16 +31,27 @@ struct Chunk::Private
     sigc::signal<void, Ptr> signal_finished;
 
     // some states
+    std::string url;
     bool running;
     size_t offset;
     size_t target_pos;
     size_t current_pos;
+
+    Private (const std::string &url,
+             size_t offset,
+             size_t size) :
+        url (url),
+        running (false),
+        offset (offset),
+        target_pos (offset + size),
+        current_pos (offset)
+    {}
 };
 
 Chunk::Chunk (const std::string &url,
               size_t offset,
               size_t size) :
-    _priv (new Private)
+    _priv (new Private (url, offset, size))
 {}
 
 sigc::connection
