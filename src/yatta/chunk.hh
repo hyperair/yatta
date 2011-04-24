@@ -21,6 +21,7 @@
 #include <tr1/memory>
 #include <sigc++/sigc++.h>
 #include <string>
+#include <exception>
 
 namespace Yatta
 {
@@ -37,6 +38,21 @@ namespace Yatta
         virtual void start () = 0;
         virtual void stop () = 0;
         virtual void reset () = 0;
+
+        class Unmergeable : public std::exception
+        {
+        public:
+            Unmergeable () {}
+            virtual ~Unmergeable () throw () {}
+
+            virtual const char* what() const throw()
+            { return "Could not merge chunks"; }
+
+        private:
+            std::string error_msg;
+        };
+
+        void merge (Ptr previous_chunk);
 
         // accessors
         bool running () const;

@@ -54,6 +54,15 @@ Chunk::Chunk (const std::string &url,
     _priv (new Private (url, offset, size))
 {}
 
+void Chunk::merge (Ptr previous_chunk)
+{
+    if (previous_chunk->current_pos () < offset ())
+        throw Unmergeable ();
+
+    previous_chunk->stop ();
+    _priv->offset = previous_chunk->offset ();
+}
+
 sigc::connection
 Chunk::connect_signal_write (WriteSlot slot)
 {
