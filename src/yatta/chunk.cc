@@ -27,10 +27,19 @@ struct Chunk::Private
                size_t /* nbytes */> signal_write;
     sigc::signal<void, Ptr> signal_started;
     sigc::signal<void, Ptr> signal_stopped;
+    sigc::signal<void, Ptr> signal_reset;
     sigc::signal<void, Ptr> signal_finished;
+
+    // some states
+    bool running;
+    size_t offset;
+    size_t target_pos;
+    size_t current_pos;
 };
 
-Chunk::Chunk () :
+Chunk::Chunk (const std::string &url,
+              size_t offset,
+              size_t size) :
     _priv (new Private)
 {}
 
@@ -43,7 +52,7 @@ Chunk::connect_signal_write (WriteSlot slot)
 sigc::connection
 Chunk::connect_signal_started (StartedSlot slot)
 {
-    return _priv->signal_stopped.connect (slot);
+    return _priv->signal_started.connect (slot);
 }
 
 sigc::connection
@@ -63,18 +72,30 @@ void
 Chunk::signal_write (char *buffer, size_t nbytes)
 {
     _priv->signal_write (shared_from_this (), buffer, nbytes);
+    _priv->current_pos += nbytes;
+    if (_priv->current_pos > _priv->target_pos)
+        stop ();
 }
 
 void
 Chunk::signal_started ()
 {
+    _priv->running = true;
     _priv->signal_started (shared_from_this ());
 }
 
 void
 Chunk::signal_stopped ()
 {
+    _priv->running = false;
     _priv->signal_stopped (shared_from_this ());
+}
+
+void
+Chunk::signal_reset ()
+{
+    _priv->current_pos = _priv->offset;
+    _priv->signal_reset (shared_from_this ());
 }
 
 void

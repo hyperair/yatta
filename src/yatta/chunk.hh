@@ -20,6 +20,7 @@
 
 #include <tr1/memory>
 #include <sigc++/sigc++.h>
+#include <string>
 
 namespace Yatta
 {
@@ -29,18 +30,20 @@ namespace Yatta
         typedef std::tr1::shared_ptr<Chunk> Ptr;
         typedef std::tr1::weak_ptr<Chunk> WPtr;
 
-        Chunk ();
+        Chunk (const std::string &url,
+               size_t offset,
+               size_t size);
 
         virtual void start () = 0;
         virtual void stop () = 0;
         virtual void reset () = 0;
 
         // accessors
-        virtual bool running () const = 0;
+        bool running () const;
         virtual bool resumable () const = 0;
-        virtual size_t offset () const = 0;
-        virtual size_t target () const = 0;
-        virtual size_t current_pos () const = 0;
+        size_t offset () const;
+        size_t target_pos () const;
+        size_t current_pos () const;
 
         // signals
         typedef sigc::slot<void, Ptr,
@@ -48,6 +51,7 @@ namespace Yatta
                            size_t /* nbytes */> WriteSlot;
         typedef sigc::slot<void, Ptr> StartedSlot;
         typedef sigc::slot<void, Ptr> StoppedSlot;
+        typedef sigc::slot<void, Ptr> ResetSlot;
         typedef sigc::slot<void, Ptr> FinishedSlot;
 
         sigc::connection connect_signal_write (WriteSlot slot);
@@ -62,6 +66,7 @@ namespace Yatta
         void signal_write (char *buffer, size_t nbytes);
         void signal_started ();
         void signal_stopped ();
+        void signal_reset ();
         void signal_finished ();
 
     private:
