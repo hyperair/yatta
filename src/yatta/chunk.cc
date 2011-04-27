@@ -59,8 +59,13 @@ void Chunk::merge (Ptr previous_chunk)
     if (previous_chunk->current_pos () < offset ())
         throw Unmergeable ();
 
+    bool need_start = previous_chunk->running () && !running ();
+
     previous_chunk->stop ();
     _priv->offset = previous_chunk->offset ();
+
+    if (need_start)
+        start ();
 }
 
 sigc::connection
