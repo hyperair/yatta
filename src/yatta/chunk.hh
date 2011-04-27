@@ -17,6 +17,7 @@
  */
 
 #ifndef YATTA_CHUNK_H
+#define YATTA_CHUNK_H
 
 #include <tr1/memory>
 #include <sigc++/sigc++.h>
