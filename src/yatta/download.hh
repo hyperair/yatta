@@ -23,10 +23,10 @@
 #include <glibmm/ustring.h>
 #include <glibmm/refptr.h>
 
+#include "chunk.hh"
+
 namespace Yatta
 {
-    namespace Curl { class Chunk; } // FIXME: abstract Chunk away so we don't
-    typedef Curl::Chunk Chunk;      // have to resort to this hack
     class Download : public sigc::trackable
     {
     public:
@@ -60,9 +60,7 @@ namespace Yatta
         connect_signal_finished (const sigc::slot<void> &slot);
 
     private:
-        typedef std::tr1::shared_ptr<Chunk> chunk_ptr_t;
-        typedef std::tr1::weak_ptr<Chunk> chunk_wptr_t;
-        typedef std::list<chunk_ptr_t> chunk_list_t;
+        typedef std::list<ChunkPtr> chunk_list_t;
 
     protected:
         // increase number of chunks by num_chunks
@@ -78,22 +76,22 @@ namespace Yatta
 
         void normalize_chunks ();
 
-        void connect_chunk_signals (chunk_ptr_t chunk);
+        void connect_chunk_signals (ChunkPtr chunk);
 
         // use weak_ptr for the functions below to avoid circular
         // dependencies preventing Chunk from destruction
-        virtual void on_chunk_header (chunk_wptr_t chunk,
+        virtual void on_chunk_header (ChunkPtr chunk,
                                       void *data,
                                       size_t bytes);
-        virtual void on_chunk_progress (chunk_wptr_t chunk,
+        virtual void on_chunk_progress (ChunkPtr chunk,
                                         double dltotal,
                                         double dlnow);
-        virtual void on_chunk_write (chunk_wptr_t chunk,
+        virtual void on_chunk_write (ChunkPtr chunk,
                                      void *data,
                                      size_t bytes);
-        virtual void on_chunk_finished (chunk_wptr_t chunk);
-        void chunk_check_resumable (chunk_wptr_t chunk);
-        void chunk_get_size (chunk_wptr_t chunk);
+        virtual void on_chunk_finished (ChunkPtr chunk);
+        void chunk_check_resumable (ChunkPtr chunk);
+        void chunk_get_size (ChunkPtr chunk);
 
     private:
         struct Private;

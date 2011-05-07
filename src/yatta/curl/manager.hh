@@ -45,10 +45,10 @@ namespace Yatta
 
                 // internal socket callback function for passing into libcurl
                 static int on_curl_socket (CURL *easy, // easy handle
-                                      curl_socket_t s, // socket
-                                      int action, // action mask
-                                      void *userp, // private callback pointer
-                                      void *socketp); // private socket pointer
+                                           curl_socket_t s, // socket
+                                           int action, // action mask
+                                           void *userp, // private callback pointer
+                                           void *socketp); // private socket pointer
 
                 // implementation of the Glib::Source class
                 virtual bool prepare (int &timeout);

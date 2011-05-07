@@ -16,15 +16,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <limits>
 #include "chunk.hh"
 
-using Yatta::Chunk;
+using namespace Yatta;
+using namespace std;
 
 struct Chunk::Private
 {
     sigc::signal<void, Ptr,
-               char * /* buffer */,
-               size_t /* nbytes */> signal_write;
+                 void * /* buffer */,
+                 size_t /* nbytes */> signal_write;
     sigc::signal<void, Ptr> signal_started;
     sigc::signal<void, Ptr> signal_stopped;
     sigc::signal<void, Ptr> signal_reset;
@@ -45,7 +47,10 @@ struct Chunk::Private
         offset (offset),
         target_pos (offset + size),
         current_pos (offset)
-    {}
+    {
+        if (target_pos <= current_pos)
+            target_pos = numeric_limits<size_t>::max();
+    }
 };
 
 Chunk::Chunk (const std::string &url,
@@ -54,7 +59,8 @@ Chunk::Chunk (const std::string &url,
     _priv (new Private (url, offset, size))
 {}
 
-void Chunk::merge (Ptr previous_chunk)
+void
+Chunk::merge (Ptr previous_chunk)
 {
     if (previous_chunk->current_pos () < offset ())
         throw Unmergeable ();
@@ -66,6 +72,36 @@ void Chunk::merge (Ptr previous_chunk)
 
     if (need_start)
         start ();
+}
+
+bool
+Chunk::running () const
+{
+    return _priv->running;
+}
+
+size_t
+Chunk::offset () const
+{
+    return _priv->offset;
+}
+
+size_t
+Chunk::target_pos () const
+{
+    return _priv->target_pos;
+}
+
+size_t
+Chunk::current_pos () const
+{
+    return _priv->current_pos;
+}
+
+std::string
+Chunk::url () const
+{
+    return _priv->url;
 }
 
 sigc::connection
@@ -94,7 +130,7 @@ Chunk::connect_signal_finished (FinishedSlot slot)
 
 
 void
-Chunk::signal_write (char *buffer, size_t nbytes)
+Chunk::signal_write (void *buffer, size_t nbytes)
 {
     _priv->signal_write (shared_from_this (), buffer, nbytes);
     _priv->current_pos += nbytes;
